@@ -2,4 +2,4 @@
 
 class SpiderNewsAllConfig(object):
 
-    news_db_addr = {"host": "localhost", "port": 3306, "db": "news", "user": "root", "password": "1234"}
+    news_db_addr = {"host": "127.0.0.1", "port": 3306, "db": "news", "user": "root", "password": "123456"}
