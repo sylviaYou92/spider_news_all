@@ -10,7 +10,7 @@ import scrapy
 
 class SpiderNewsAllItem(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
+    name = scrapy.Field()
     day = scrapy.Field()
     title = scrapy.Field()
     _type = scrapy.Field()
@@ -18,4 +18,5 @@ class SpiderNewsAllItem(scrapy.Item):
     url = scrapy.Field()
     article = scrapy.Field()
     site = scrapy.Field()
+    markdown = scrapy.Field()
     pass

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+import threading
+
+import MySQLdb
 import scrapy
 from bs4 import BeautifulSoup
 from scrapy import log
-import threading
-import MySQLdb
-from datetime import date, timedelta
-import re
+
+from spider_news_all.config import SpiderNewsAllConfig
 from spider_news_all.items import SpiderNewsAllItem
+
 
 class CjwSpider(scrapy.Spider):
     name = "cjw"
@@ -32,10 +34,11 @@ class CjwSpider(scrapy.Spider):
     handle_httpstatus_list = [521]
 
     FLAG_INTERRUPT = False
-    SELECT_NEWS_BY_TITLE_AND_URL = "SELECT * FROM news_all WHERE title='%s' AND url='%s'"
+    SELECT_NEWS_BY_TITLE_AND_URL = "SELECT COUNT(*) FROM news_all WHERE title='%s' AND url='%s'"
 
     lock = threading.RLock()
-    conn=MySQLdb.connect(user='root', passwd='123123', db='news', autocommit=True)
+    cfg = SpiderNewsAllConfig.news_db_addr
+    conn=MySQLdb.connect(host= cfg['host'],user=cfg['user'], passwd=cfg['password'], db=cfg['db'], autocommit=True)
     conn.set_character_set('utf8')
     cursor = conn.cursor()
     cursor.execute('SET NAMES utf8;')
@@ -46,6 +49,7 @@ class CjwSpider(scrapy.Spider):
         if self.FLAG_INTERRUPT:
             self.lock.acquire()
             rows = self.cursor.execute(self.SELECT_NEWS_BY_TITLE_AND_URL % (title, url))
+            print self.cursor.fetchone()
             if rows > 0:
                 log.msg("News saved all finished.", level=log.INFO)
                 return False
@@ -76,12 +80,13 @@ class CjwSpider(scrapy.Spider):
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
-        item['day'] = day
+        item['day'] = "2010-01-01"
         item['_type'] = _type
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
         item['site'] = u'财经网'
+        item['markdown'] = "markdown"
         return item
 
     def get_type_from_url(self, url):
@@ -89,32 +94,6 @@ class CjwSpider(scrapy.Spider):
             return u'宏观频道首页.每日要闻宏观'
         elif 'observation' in url:
             return u'宏观频道首页.观察'
-        elif 'economics' in url:
-            return u'宏观频道首页.经济'
-        elif 'region' in url:
-            return u'宏观频道首页.区域'
-        elif 'policy' in url:
-            return u'宏观频道首页.政策'
-        elif 'report' in url:
-            return u'宏观频道首页.报告'
-        elif 'industrianews' in url:
-            return u'产经频道首页.每日要闻产经'
-        elif 'steel' in url:
-            return u'产经频道首页.钢铁'
-        elif 'energy' in url:
-            return u'产经频道首页.能源'
-        elif 'aviations' in url:
-            return u'产经频道首页.航空'
-        elif 'traffic' in url:
-            return u'产经频道首页.交通'
-        elif 'food' in url:
-            return u'产经频道首页.食品'
-        elif 'medicals' in url:
-            return u'产经频道首页.医疗'
-        elif 'consumption' in url:
-            return u'产经频道首页.消费品'
-        elif 'industrys' in url:
-            return u'产经频道首页.综合'
         else:
             return ''
 
