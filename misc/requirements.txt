@@ -1,5 +1,5 @@
 MySQL-python==1.2.5
-mysql-connector==2.1.4
 scrapy
 BeautifulSoup
+beautifulsoup4
 tomd
