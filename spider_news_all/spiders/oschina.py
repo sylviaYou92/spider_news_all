@@ -18,8 +18,9 @@ import MySQLdb
 import threading
 from spider_news_all.config import SpiderNewsAllConfig
 
-class Oschina2Spider(scrapy.Spider):
+class OschinaSpider(scrapy.Spider):
     name = "oschina"
+    site_name = "oschina"
     allowed_domains = ["oschina.net"]###?
     start_urls = (
             "https://www.oschina.net/news/widgets/_news_index_generic_list?p=1&type=ajax",
@@ -43,18 +44,18 @@ class Oschina2Spider(scrapy.Spider):
     
     def __init__(self):
         self.lock.acquire()
-        self.cursor.execute("SELECT start_url, latest_url FROM url_record WHERE site_name='oschina'")
+        self.cursor.execute("SELECT start_url, latest_url FROM url_record WHERE site_name='%s'"%self.site_name)
         self.record_url = dict(self.cursor.fetchall())
         self.lock.release()
         for start_url in [re.match("(.+)\?p=\d+&type=ajax",url).group(1) for url in self.start_urls]:
             if self.record_url.get(start_url)==None:
                 self.record_url.setdefault(start_url,None)
                 self.lock.acquire()
-                self.cursor.execute("INSERT INTO url_record (site_name, start_url, latest_url) VALUES ('%s','%s','%s')"%("oschina",start_url,None))
+                self.cursor.execute("INSERT INTO url_record (site_name, start_url, latest_url) VALUES ('%s','%s','%s')"%(self.site_name,start_url,None))
                 self.lock.release()
-
+        self.updated_record_url = self.record_url.copy()
     
-    def time_convert(self,old_string,time_now):
+    def time_convert(old_string,time_now):
         if type(old_string)==unicode:
             old_string = old_string.encode("utf-8")
         old_string = re.sub("：",":",old_string)
@@ -71,7 +72,7 @@ class Oschina2Spider(scrapy.Spider):
             new_string = re.sub("\d+天前",(time_now + timedelta(days = -delta_day)).strftime("%Y-%m-%d"),old_string)
         elif re.search("(\d+)小时前",old_string):
             delta_hour = int(re.search("(\d+)小时前",old_string).group(1))
-            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d"),old_string)
+            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d %H:%M"),old_string)
         elif re.search("(\d+)分钟前",old_string):
             delta_min =  int(re.search("(\d+)分钟前",old_string).group(1))
             new_string = (time_now-datetime.timedelta(minutes=delta_min)).strftime("%Y-%m-%d %H:%M")
@@ -98,10 +99,9 @@ class Oschina2Spider(scrapy.Spider):
             date = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(3))
             new_string = re.sub("\d+年\d+月\d+日",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
         elif re.match("刚刚",old_string):
-            new_string = time.strftime("%Y-%m-%d %H:%M:%S")
-    
-        return new_string
-    
+            new_string = time_now.strftime("%Y-%m-%d %H:%M:%S")
+        
+        return new_string    
 
 
     def parse_news(self, response):
@@ -150,7 +150,7 @@ class Oschina2Spider(scrapy.Spider):
                 if article and not article.find("div",class_="ad-wrap")==None:
                     article.find("div",class_="ad-wrap").extract()
                 
-                markdown = markdown = Tomd(str(article)).markdown
+                markdown = Tomd(str(article)).markdown
                 article = article.text.strip() #提取标签文本
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
@@ -212,9 +212,7 @@ class Oschina2Spider(scrapy.Spider):
                         url_news = "https://www.oschina.net"+url_news
                         
                     if url in self.start_urls and is_first:
-                        self.lock.acquire()
-                        self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='oschina' AND start_url='%s'"%(url_news,start_url))
-                        self.lock.release()
+                        self.updated_record_url[start_url] = url_news
                         is_first = False
                     if url_news == self.record_url[start_url]:
                         need_parse_next_page = False
@@ -228,11 +226,15 @@ class Oschina2Spider(scrapy.Spider):
                     items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
             #这里是动态加载，没有下一页按钮
             page = int(re.search("list\?p=(\d+)+&type=ajax",url).group(1))
-            if need_parse_next_page and page<3:#need_parse_next_page:
+            if need_parse_next_page and page < 3:#need_parse_next_page:
                 page += 1
                 page_next = re.sub("list\?p=(\d)+&type=ajax","list?p=%s&type=ajax"%str(page),url)
                 if need_parse_next_page:
                     items.append(self.make_requests_from_url(page_next))
+            else:
+                self.lock.acquire()
+                self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
+                self.lock.release()
             
 #            if (soup.find('a', text=u'下一页')['href'].startswith('http://')):
 #                page_next = soup.find('a', text=u'下一页')['href']

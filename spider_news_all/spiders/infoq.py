@@ -21,7 +21,8 @@ from spider_news_all.config import SpiderNewsAllConfig
 
 class InfoqSpider(scrapy.Spider):
     name = "infoq"
-    allowed_domains = ["oschina.net"]###?
+    site_name = "infoq"
+    allowed_domains = ["infoq.com"]
     start_urls = (
             "http://www.infoq.com/cn/development/news/0",
             "http://www.infoq.com/cn/architecture-design/news/0",
@@ -36,7 +37,7 @@ class InfoqSpider(scrapy.Spider):
             "http://www.infoq.com/cn/news/0",
             "http://www.infoq.com/cn/articles/0",
     )
-    handle_httpstatus_list = [521]###?
+    handle_httpstatus_list = [521]
  
     FLAG_INTERRUPT = False
  
@@ -52,19 +53,18 @@ class InfoqSpider(scrapy.Spider):
     
     def __init__(self):
         self.lock.acquire()
-        self.cursor.execute("SELECT start_url, latest_url FROM url_record WHERE site_name='infoq'")
+        self.cursor.execute("SELECT start_url, latest_url FROM url_record WHERE site_name='%s'"%self.site_name)
         self.record_url = dict(self.cursor.fetchall())
         self.lock.release()
         for start_url in [re.search("(.*)/\d+",url).group(1) for url in self.start_urls]:
             if self.record_url.get(start_url)==None:
                 self.record_url.setdefault(start_url,None)
                 self.lock.acquire()
-                self.cursor.execute("INSERT INTO url_record (site_name, start_url, latest_url) VALUES ('%s','%s','%s')"%("infoq",start_url,None))
+                self.cursor.execute("INSERT INTO url_record (site_name, start_url, latest_url) VALUES ('%s','%s','%s')"%(self.site_name,start_url,None))
                 self.lock.release()
         self.updated_record_url = self.record_url.copy()
 
-    
-    def time_convert(self,old_string,time_now):
+    def time_convert(old_string,time_now):
         if type(old_string)==unicode:
             old_string = old_string.encode("utf-8")
         old_string = re.sub("：",":",old_string)
@@ -81,7 +81,7 @@ class InfoqSpider(scrapy.Spider):
             new_string = re.sub("\d+天前",(time_now + timedelta(days = -delta_day)).strftime("%Y-%m-%d"),old_string)
         elif re.search("(\d+)小时前",old_string):
             delta_hour = int(re.search("(\d+)小时前",old_string).group(1))
-            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d"),old_string)
+            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d %H:%M"),old_string)
         elif re.search("(\d+)分钟前",old_string):
             delta_min =  int(re.search("(\d+)分钟前",old_string).group(1))
             new_string = (time_now-datetime.timedelta(minutes=delta_min)).strftime("%Y-%m-%d %H:%M")
@@ -108,10 +108,9 @@ class InfoqSpider(scrapy.Spider):
             date = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(3))
             new_string = re.sub("\d+年\d+月\d+日",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
         elif re.match("刚刚",old_string):
-            new_string = time.strftime("%Y-%m-%d %H:%M:%S")
-    
+            new_string = time_now.strftime("%Y-%m-%d %H:%M:%S")
+        
         return new_string
-    
 
 
     def parse_news(self, response):
@@ -201,9 +200,6 @@ class InfoqSpider(scrapy.Spider):
                         self.updated_record_url[start_url] = url_news
                         is_first = False
                     if url_news == self.record_url[start_url]:
-#                        self.lock.acquire()
-#                        self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='infoq' AND start_url='%s'"%(self.updated_record_url[start_url],start_url))
-#                        self.lock.release()
                         need_parse_next_page = False
                         break
 
@@ -226,7 +222,7 @@ class InfoqSpider(scrapy.Spider):
                     items.append(self.make_requests_from_url(page_next))
             else:
                 self.lock.acquire()
-                self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='infoq' AND start_url='%s'"%(self.updated_record_url[start_url],start_url))
+                self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
                 self.lock.release()
                         
 #            if (soup.find('a', text=u'下一页')['href'].startswith('http://')):
