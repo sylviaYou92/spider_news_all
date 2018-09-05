@@ -24,7 +24,6 @@ class SpiderNewsAllPipeline(object):
     cursor.execute('SET CHARACTER SET utf8;')
     cursor.execute('SET character_set_connection=utf8;')
 
-    SELECT_LAST_ID = ("select last_insert_id()")
     INSERT_TYPE_ID = ("INSERT INTO dede_arctype (typename) VALUES (%s)")
     INSERT_ARCTINY = ("INSERT INTO dede_acrtiny (typeid,typeid2) VALUES (%s,%s)")
     INSERT_ADDONARTICLE = ("INSERT INTO dede_addonarticle (aid,typeid,body,redirecturl) VALUES (%s,%s,%s,%s)")
@@ -47,26 +46,26 @@ class SpiderNewsAllPipeline(object):
                 pass
             else:
                 self.cursor.execute(self.INSERT_TYPE_ID, _type)
-                self.cursor.execute("SELECT_LAST_ID")
+                self.cursor.execute("select max(id) from dede_arctype")
                 typeid = self.cursor.fetchone()
             
-            self.cursor.fetchone("select id from dede_arctype where typename = %s",(site,))
+            self.cursor.execute("select id from dede_arctype where typename = %s",(site,))
             typeid2 = self.cursor.fetchone()
             if typeid2:
                 pass
             else:
                 self.cursor.execute(self.INSERT_TYPE_ID, site)
-                self.cursor.execute("SELECT_LAST_ID")
+                self.cursor.execute("select max(id) from dede_arctype")
                 typeid2 = self.cursor.fetchone()
             
             self.cursor.execute(self.INSERT_ARCTINY, (typeid,typeid2))
-            self.cursor.execute("SELECT_LAST_ID")
+            self.cursor.execute("select max(id) from dede_arctiny")
             articleid = self.cursor.fetchone()
 
             
             self.cursor.execute(self.INSERT_ADDONARTICLE, (articleid, typeid, markdown, url))
 
-            self.cursor.execute(self.INSERT_ARCHIVES, (articleid, typeid, typeid2, title, url, day, keywords) VALUES))
+            self.cursor.execute(self.INSERT_ARCHIVES, (articleid, typeid, typeid2, title, site, day, keywords) VALUES))
 
             
 

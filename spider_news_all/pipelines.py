@@ -11,8 +11,6 @@ from scrapy import log
 from config import SpiderNewsAllConfig
 from hashlib import md5
 
-
-
 class SpiderNewsAllPipeline(object):
     
     INSERT_NEWS_ALL = ("INSERT INTO news_all (linkmd5id,title, day, type, url, keywords, article, site, markdown) "

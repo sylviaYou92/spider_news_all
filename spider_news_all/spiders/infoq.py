@@ -22,7 +22,7 @@ from spider_news_all.config import SpiderNewsAllConfig
 class InfoqSpider(scrapy.Spider):
     name = "infoq"
     site_name = "infoq"
-    allowed_domains = ["infoq.com"]
+    allowed_domains = ["infoq.com"]###?
     start_urls = (
             "http://www.infoq.com/cn/development/news/0",
             "http://www.infoq.com/cn/architecture-design/news/0",
@@ -37,7 +37,7 @@ class InfoqSpider(scrapy.Spider):
             "http://www.infoq.com/cn/news/0",
             "http://www.infoq.com/cn/articles/0",
     )
-    handle_httpstatus_list = [521]
+    handle_httpstatus_list = [521]###?
  
     FLAG_INTERRUPT = False
  
@@ -64,7 +64,7 @@ class InfoqSpider(scrapy.Spider):
                 self.lock.release()
         self.updated_record_url = self.record_url.copy()
 
-    def time_convert(old_string,time_now):
+    def time_convert(self,old_string,time_now):
         if type(old_string)==unicode:
             old_string = old_string.encode("utf-8")
         old_string = re.sub("：",":",old_string)
@@ -110,7 +110,15 @@ class InfoqSpider(scrapy.Spider):
         elif re.match("刚刚",old_string):
             new_string = time_now.strftime("%Y-%m-%d %H:%M:%S")
         
-        return new_string
+        if re.match("\d{4}-\d+-\d+ \d+:\d+:\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M:%S")))
+        elif re.match("\d{4}-\d+-\d+ \d+:\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M")))
+        elif re.match("\d{4}-\d+-\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d")))
+
+        return time_stamp
+
 
 
     def parse_news(self, response):
