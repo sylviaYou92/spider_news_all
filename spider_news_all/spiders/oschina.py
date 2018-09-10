@@ -179,6 +179,8 @@ class OschinaSpider(scrapy.Spider):
             return u'综合资讯'
         elif 'industry' in url:
             return u'行业资讯'
+        elif 'project' in url:
+            return u'软件更新'
         elif 'programming_language' in url:
             return u'编程语言'
         else:
