@@ -24,7 +24,6 @@ class OschinaSpider(scrapy.Spider):
     allowed_domains = ["oschina.net"]###?
     start_urls = (
             "https://www.oschina.net/news/widgets/_news_index_generic_list?p=1&type=ajax",
-            "https://www.oschina.net/news/widgets/_news_index_project_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_industry_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_programming_language_list?p=1&type=ajax",
     )
@@ -137,7 +136,7 @@ class OschinaSpider(scrapy.Spider):
             if re.search("translate",url):
                 article = soup.find_all("div",class_ = "translate-content")
                 markdown = "".join(str(article))
-                markdown = Tomd(markdown).markdown
+                markdown = Tomd(markdown).markdown.decode("utf-8")
                 article = [tag.text.strip() for tag in article]
                 article = ''.join(article)
             else:
@@ -157,7 +156,7 @@ class OschinaSpider(scrapy.Spider):
                 if article and not article.find("div",class_="ad-wrap")==None:
                     article.find("div",class_="ad-wrap").extract()
                 
-                markdown = Tomd(str(article)).markdown
+                markdown = Tomd(str(article)).markdown.decode("utf-8")
                 article = article.text.strip() #提取标签文本
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
@@ -178,8 +177,6 @@ class OschinaSpider(scrapy.Spider):
             return u'开源项目'
         elif 'generic' in url:
             return u'综合资讯'
-        elif 'project' in url:
-            return u'软件更新'
         elif 'industry' in url:
             return u'行业资讯'
         elif 'programming_language' in url:
