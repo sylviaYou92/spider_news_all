@@ -134,10 +134,11 @@ class OschinaSpider(scrapy.Spider):
         # 分情况获取储存新闻内容的标签
                 # "码云推荐"，获取项目简介（通常是 README.md 文档内容）
             if re.search("translate",url):
-                article = soup.find_all("div",class_ = "translate-content")
-                markdown = "".join(str(article))
-                markdown = Tomd(markdown).markdown.decode("utf-8")
-                article = [tag.text.strip() for tag in article]
+                content = soup.find_all("div",class_ = "translate-content")
+                article = [str(tag) for tag in content]
+                markdown = "".join((article)).decode('utf-8')  # html code
+#                markdown = Tomd(markdown).markdown  # 转markdown
+                article = [tag.text.strip() for tag in content]
                 article = ''.join(article)
             else:
                 if re.match("https://gitee.com",url):
@@ -156,7 +157,8 @@ class OschinaSpider(scrapy.Spider):
                 if article and not article.find("div",class_="ad-wrap")==None:
                     article.find("div",class_="ad-wrap").extract()
                 
-                markdown = Tomd(str(article)).markdown.decode("utf-8")
+                markdown = str(article).decode('utf-8') # html code 
+#                markdown = Tomd(str(article)).markdown.decode("utf-8")
                 article = article.text.strip() #提取标签文本
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
@@ -166,7 +168,7 @@ class OschinaSpider(scrapy.Spider):
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
-        item['site'] = '开源中国'
+        item['site'] = u'开源中国'
         item['markdown'] = markdown
         return item
 
@@ -179,8 +181,6 @@ class OschinaSpider(scrapy.Spider):
             return u'综合资讯'
         elif 'industry' in url:
             return u'行业资讯'
-        elif 'project' in url:
-            return u'软件更新'
         elif 'programming_language' in url:
             return u'编程语言'
         else:

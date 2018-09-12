@@ -129,7 +129,7 @@ class AkamaiBlogSpider(scrapy.Spider):
 #            log.msg("News " + title + " dont has keywords!", level=log.INFO)
         
         try:
-            content = soup.find("div","asset-content entry-content")
+            content = soup.find("div",class_="asset-content entry-content")
             article = content.text.strip().replace(u'\xc2\xa0', u' ')
             markdown = Tomd(unicode(content).replace(u"\xc2\xa0",u" ")).markdown
         except:
@@ -151,14 +151,14 @@ class AkamaiBlogSpider(scrapy.Spider):
 #        if url in self.start_urls:
 #            self.crawl_index[self.start_urls.index(url)]=True
 #            self.all_crawled = not False in self.crawl_index
-        start_url = re.search("(.*)/\d+",url).group(1)   
+        start_url = self.start_urls[0]  
         items = []
         time_now = datetime.datetime.now()
         try:
             response = response.body
             soup = BeautifulSoup(response)
 #            lists = soup.find(class_='list')
-            links = soup.find_all("div",class_ = ["news_type_block","news_type_block last","new_type1","news_type1 last","news_type2 full_screen"])
+            links = soup.find_all("div",class_ = "entry-asset asset hentry")
         except:
             items.append(self.make_requests_from_url(url))
             log.msg("Page " + url + " parse ERROR, try again !", level=log.ERROR)
@@ -187,15 +187,17 @@ class AkamaiBlogSpider(scrapy.Spider):
                     title = links[i].find("h2").text #获取首页新闻标题
                     items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
             
-            if url == 'https://blogs.akamai.com/':
+            if url == 'https://blogs.akamai.com/' or url == 'https://blogs.akamai.com':
                 page = 1
             else:
                 page = int(re.search("index(\d+).html",url).group(1))
             
-            page = int(re.search("(.*)/(\d+)",url).group(2))
             if need_parse_next_page and page < 2:#need_parse_next_page:
                 page += 1
-                page_next = re.sub("\d+",str(page),url)
+                if page == 2:
+                    page_next = "https://blogs.akamai.com/index2.html"
+                elif page > 2 :
+                    page_next = re.sub("\d+",str(page),url)
                 if need_parse_next_page:
                     items.append(self.make_requests_from_url(page_next))
             else:
