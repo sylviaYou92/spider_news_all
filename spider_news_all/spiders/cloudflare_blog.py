@@ -28,7 +28,7 @@ class CloudflareSpider(scrapy.Spider):
     start_urls = (
             "https://blog.cloudflare.com",
     )
-    handle_httpstatus_list = [521]###?
+    handle_httpstatus_list = [521]
  
 
     lock = threading.RLock()
@@ -54,6 +54,9 @@ class CloudflareSpider(scrapy.Spider):
                 self.lock.release()
         self.updated_record_url = self.record_url.copy()
 
+    def number(self,matched):
+        value = int(matched.group('value'))
+        return str(value)
     
 
     def parse_news(self, response):
@@ -65,18 +68,19 @@ class CloudflareSpider(scrapy.Spider):
         title = response.meta['title']
         _type = response.meta['_type']
         response = response.body
-        soup = BeautifulSoup(response)
+        soup = BeautifulSoup(response,"lxml")
         try:
             items_keywords = soup.find("div",class_='footer-tags').find_all('a')
-            for i in range(0, len(items_keywords)):
-                keywords += items_keywords[i].text.strip() + ' '
+            keywords = [tag.text.strip() for tag in items_keywords]
+            keywords = ','.join(keywords)
         except:
             log.msg("News " + title + " dont has keywords!", level=log.INFO)
         
         try:
             content = soup.find("div",class_ = "post-content")
             article = content.text.strip()
-            markdown = self.html_parser.unescape(Tomd(str(content)).markdown.decode("utf-8"))
+            markdown = str(content).decode('utf-8')
+#            markdown = self.html_parser.unescape(Tomd(str(content)).markdown.decode("utf-8"))
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
@@ -97,7 +101,7 @@ class CloudflareSpider(scrapy.Spider):
         items = []
         try:
             response = response.body
-            soup = BeautifulSoup(response)
+            soup = BeautifulSoup(response,"lxml")
             links = soup.find_all("article")
         except:
             items.append(self.make_requests_from_url(url))
@@ -107,8 +111,8 @@ class CloudflareSpider(scrapy.Spider):
         if len(links) > 0:
             is_first = True
             for i in range(0, len(links)):
-                    url_news = links[i].find("h2").find("a").get("href") #获取新闻内容页链接
-                    if not re.match("http",url_news): #必要时对不完整的新闻链接作补充修改
+                    url_news = links[i].find("h2").find("a").get("href") 
+                    if not re.match("http",url_news): 
                         url_news = start_url + url_news
                     if url in self.start_urls and is_first:
                         self.updated_record_url[start_url] = url_news
@@ -118,11 +122,11 @@ class CloudflareSpider(scrapy.Spider):
                         break
 
                     _type = u"友商官方"
-                    day = links[i].find("time").text ##获取新闻发布时间
-                    day = re.sub(re.search("\d+(nd|st|rd|th)",day).group(1),"",day) 
-                    day = datetime.datetime.strptime(day, "%B %d, %Y %I:%M%p")+timedelta(hours = 8) #convert time_zone
+                    day = links[i].find("time").text 
+                    day = re.sub('(?P<value>\d+)(nd|st|rd|th)', self.number, day)
+                    day = datetime.datetime.strptime(day, "%B %d, %Y %I:%M%p")+timedelta(hours = 8) #convert time format and time-zone
                     day = int(time.mktime(day.timetuple())) # convert to timestamp
-                    title = links[i].find("h2").text #获取首页新闻标题
+                    title = links[i].find("h2").text 
                     items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
             
             if url == start_url or url == start_url+"/":
@@ -142,12 +146,6 @@ class CloudflareSpider(scrapy.Spider):
                 self.lock.acquire()
                 self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
                 self.lock.release()
-                        
-#            if (soup.find('a', text=u'下一页')['href'].startswith('http://')):
-#                page_next = soup.find('a', text=u'下一页')['href']
-#                if need_parse_next_page:
-#                    items.append(self.make_requests_from_url(page_next))
-            
             return items
         
         
