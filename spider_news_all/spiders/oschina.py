@@ -106,7 +106,6 @@ class OschinaSpider(scrapy.Spider):
             time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M")))
         elif re.match("\d{4}-\d+-\d+",new_string):
             time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d")))
-
         return time_stamp
 
 
@@ -130,27 +129,23 @@ class OschinaSpider(scrapy.Spider):
 
         
         try:
-        ##################################
-        # 分情况获取储存新闻内容的标签
-                # "码云推荐"，获取项目简介（通常是 README.md 文档内容）
             if re.search("translate",url):
                 content = soup.find_all("div",class_ = "translate-content")
                 article = [str(tag) for tag in content]
                 markdown = "".join((article)).decode('utf-8')  # html code
-#                markdown = Tomd(markdown).markdown  # 转markdown
+#                markdown = Tomd(markdown).markdown  # convert to markdown
                 article = [tag.text.strip() for tag in content]
                 article = ''.join(article)
             else:
-                if re.match("https://gitee.com",url):
-                    article = soup.find("div",class_="file_content markdown-body")# CSS选择器：#git-readme > div > div.file_content.markdown-body
-                # "码云周刊"
+                if re.match("https://gitee.com",url): 
+                    article = soup.find("div",class_="file_content markdown-body")
                 elif re.match("https://blog.gitee.com",url):
                     article = soup.find("div",class_="entry-content")
-                elif re.search("translate",url):
-                    article = soup.find_all("div",class_ = "translate-content")
-                # 其他常见页面
-                elif soup.find("div",class_= ["content","box-aw main"]):
-                    article = soup.find("div",class_= ["content","box-aw main"])
+                elif re.match("https://www.oschina.net/p",url):
+                    article = soup.find("div",class_="detail editor-viewer all")
+                    #v-details > div.detail.editor-viewer.all
+                elif soup.find("div",class_= 'content'):
+                    article = soup.find("div",class_= "content")
                 else:
                     article = soup.find("section",class_= ["wrap cke_editable cke_editable_themed cke_contents_ltr cke_show_borders clearfix"])
                     
@@ -158,8 +153,8 @@ class OschinaSpider(scrapy.Spider):
                     article.find("div",class_="ad-wrap").extract()
                 
                 markdown = str(article).decode('utf-8') # html code 
-#                markdown = Tomd(str(article)).markdown.decode("utf-8")
-                article = article.text.strip() #提取标签文本
+#                markdown = Tomd(str(article)).markdown.decode("utf-8") # convert to markdown
+                article = article.text.strip()
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
@@ -173,9 +168,7 @@ class OschinaSpider(scrapy.Spider):
         return item
 
     def get_type_from_url(self, url,url_news):
-        if re.match("https://www.oschina.net/event/",url_news):
-            return u'活动资讯'
-        elif re.match("https://www.oschina.net/p",url_news):
+        if re.match("https://www.oschina.net/p",url_news):
             return u'开源项目'
         elif 'generic' in url:
             return u'综合资讯'
@@ -191,16 +184,12 @@ class OschinaSpider(scrapy.Spider):
     def parse(self, response):
         log.msg("Start to parse page " + response.url, level=log.INFO)
         url = response.url
-#        if url in self.start_urls:
-#            self.crawl_index[self.start_urls.index(url)]=True
-#            self.all_crawled = not False in self.crawl_index
         start_url = re.match("(.+)\?p=\d+&type=ajax",url).group(1)    
         items = []
         time_now = datetime.datetime.now()
         try:
             response = response.body
             soup = BeautifulSoup(response)
-#            lists = soup.find(class_='list')
             links = soup.find_all("div",class_ = "item news-item")
         except:
             items.append(self.make_requests_from_url(url))
@@ -210,11 +199,13 @@ class OschinaSpider(scrapy.Spider):
         if len(links) > 0:
             is_first = True
             for i in range(0, len(links)):
-                if not u"广告" in links[i].find("div",class_ = "extra").get_text() and not "topic" in links[i].a['href'] and not "blog" in links[i].a['href']: #如果是广告、话题、博客（乱弹），就不存
-                    url_news = links[i].a['href'].strip() #获取新闻内容页链接
+                if not u"广告" in links[i].find("div",class_ = "extra").get_text() and not "topic" in links[i].a['href'] and not "blog" in links[i].a['href']: 
+                    url_news = links[i].a['href'].strip() 
                     if re.match("https://www.oschina.net/question",url_news):
                         continue
-                    if not re.match("http",url_news): #必要时对不完整的新闻链接作补充修改
+                    if re.match("https://www.oschina.net/event/",url_news):
+                        continue
+                    if not re.match("http",url_news): 
                         url_news = "https://www.oschina.net"+url_news
                         
                     if url in self.start_urls and is_first:
@@ -226,11 +217,11 @@ class OschinaSpider(scrapy.Spider):
 
                     _type = self.get_type_from_url(url,url_news)
                     
-                    day = links[i].select('div.item')[1].text.strip() ##获取新闻发布时间
+                    day = links[i].select('div.item')[1].text.strip() 
                     day = self.time_convert(day,time_now)
-                    title = links[i].a['title'] #获取首页新闻标题
+                    title = links[i].a['title']
                     items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
-            #这里是动态加载，没有下一页按钮
+           
             page = int(re.search("list\?p=(\d+)+&type=ajax",url).group(1))
             if need_parse_next_page and page < 3:#need_parse_next_page:
                 page += 1
@@ -241,12 +232,7 @@ class OschinaSpider(scrapy.Spider):
                 self.lock.acquire()
                 self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
                 self.lock.release()
-            
-#            if (soup.find('a', text=u'下一页')['href'].startswith('http://')):
-#                page_next = soup.find('a', text=u'下一页')['href']
-#                if need_parse_next_page:
-#                    items.append(self.make_requests_from_url(page_next))
-            
+          
             return items
         
         
