@@ -69,7 +69,7 @@ class SpiderNewsAllPipeline(object):
             if type2_id:
                 pass
             else:
-                typedir = "{cmspath}/a/"+self._get_linkmd5id(type2)
+                typedir = "{cmspath}/a/"+self._get_linkmd5id(type1)+"/"+self._get_linkmd5id(type2)
                 self.cursor.execute(self.INSERT_TYPE_ID, (type1_id,type1_id,type2,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
                 self.cursor.execute("select max(id) from dede_arctype")
                 type2_id = self.cursor.fetchone()
