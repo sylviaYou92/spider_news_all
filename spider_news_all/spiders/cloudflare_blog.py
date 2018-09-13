@@ -79,7 +79,7 @@ class CloudflareSpider(scrapy.Spider):
         try:
             content = soup.find("div",class_ = "post-content")
             article = content.text.strip()
-            markdown = str(content).decode('utf-8')
+            markdown = str(content).decode('utf-8') #html code
 #            markdown = self.html_parser.unescape(Tomd(str(content)).markdown.decode("utf-8"))
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
