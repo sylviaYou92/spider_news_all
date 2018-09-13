@@ -60,7 +60,7 @@ class SpiderNewsAllPipeline(object):
                 pass
             else:
                 typedir = "{cmspath}/a/"+self._get_linkmd5id(type1)
-                self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type1,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
+                self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type1_id,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
                 self.cursor.execute("select max(id) from dede_arctype")
                 type1_id = self.cursor.fetchone()
             # type2 validation
@@ -70,7 +70,7 @@ class SpiderNewsAllPipeline(object):
                 pass
             else:
                 typedir = "{cmspath}/a/"+self._get_linkmd5id(type2)
-                self.cursor.execute(self.INSERT_TYPE_ID, (type1,type1,type2,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
+                self.cursor.execute(self.INSERT_TYPE_ID, (type1_id,type1_id,type2_id,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
                 self.cursor.execute("select max(id) from dede_arctype")
                 type2_id = self.cursor.fetchone()
             # type3 validation
@@ -80,7 +80,7 @@ class SpiderNewsAllPipeline(object):
                 pass
             else:
                 typedir = "{cmspath}/a/"+self._get_linkmd5id(type3)
-                self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type3,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
+                self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type3_id,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
                 self.cursor.execute("select max(id) from dede_arctype")
                 type3_id = self.cursor.fetchone()
 
