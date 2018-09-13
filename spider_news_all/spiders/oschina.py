@@ -8,12 +8,12 @@ Created on Fri Aug 31 09:56:29 2018
 import scrapy
 from bs4 import BeautifulSoup
 from scrapy import log
-from datetime import date, timedelta
+from datetime import timedelta
 import re
 from spider_news_all.items import SpiderNewsAllItem
 import datetime
 import time
-from tomd import Tomd
+#from tomd import Tomd
 import MySQLdb
 import threading
 from spider_news_all.config import SpiderNewsAllConfig
@@ -26,11 +26,10 @@ class OschinaSpider(scrapy.Spider):
             "https://www.oschina.net/news/widgets/_news_index_generic_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_industry_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_programming_language_list?p=1&type=ajax",
+            "https://www.oschina.net/translate/widgets/_translate_index_list?category=11&tab=completed&sort=&p=1&type=ajax",
     )
     handle_httpstatus_list = [521]###?
-    
-    FLAG_INTERRUPT = False
- 
+
     lock = threading.RLock()
     cfg = SpiderNewsAllConfig.news_db_addr
     conn=MySQLdb.connect(host= cfg['host'],user=cfg['user'], passwd=cfg['password'], db=cfg['db'], autocommit=True)
@@ -59,7 +58,6 @@ class OschinaSpider(scrapy.Spider):
             old_string = old_string.encode("utf-8")
         old_string = re.sub("：",":",old_string)
         new_string = old_string
-        #new_stirng = time.strftime("%Y-%m-%d %H:%M:%S")
         if re.match("今天",old_string):
             new_string = re.sub("今天",time_now.strftime("%Y-%m-%d"),old_string)
         elif re.match("昨天",old_string):
@@ -112,21 +110,13 @@ class OschinaSpider(scrapy.Spider):
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
-        day = title = _type = keywords = url = article = ''
+        day = title = type3 = keywords = url = article = ''
         url = response.url
         day = response.meta['day']
         title = response.meta['title']
-        _type = response.meta['_type']
+        type3 = response.meta['type3']
         response = response.body
         soup = BeautifulSoup(response)
-#        try:
-#            items_keywords = soup.find(class_='ar_keywords').find_all('a')
-#            for i in range(0, len(items_keywords)):
-#                keywords += items_keywords[i].text.strip() + ' '
-#        except:
-#            log.msg("News " + title + " dont has keywords!", level=log.INFO)
-        
-
         
         try:
             if re.search("translate",url):
@@ -159,7 +149,9 @@ class OschinaSpider(scrapy.Spider):
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
         item['day'] = day
-        item['_type'] = _type
+        item['type1'] = u'源站资讯'
+        item['type2'] = u'开源中国'
+        item['type3'] = type3
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
@@ -168,16 +160,10 @@ class OschinaSpider(scrapy.Spider):
         return item
 
     def get_type_from_url(self, url,url_news):
-        if re.match("https://www.oschina.net/p",url_news):
-            return u'开源项目'
-        elif 'generic' in url:
-            return u'综合资讯'
-        elif 'industry' in url:
-            return u'行业资讯'
-        elif 'programming_language' in url:
-            return u'编程语言'
+        if 'translate' in url:
+            return u'技术博文'
         else:
-            return ''
+            return u'综合新闻'
 
 
 
@@ -205,6 +191,8 @@ class OschinaSpider(scrapy.Spider):
                         continue
                     if re.match("https://www.oschina.net/event/",url_news):
                         continue
+                    if not re.match("https://www.oschina.net/translate",url) and re.match("https://www.oschina.net/translate",url_news):
+                        continue
                     if not re.match("http",url_news): 
                         url_news = "https://www.oschina.net"+url_news
                         
@@ -215,17 +203,17 @@ class OschinaSpider(scrapy.Spider):
                         need_parse_next_page = False
                         break
 
-                    _type = self.get_type_from_url(url,url_news)
+                    type3 = self.get_type_from_url(url,url_news)
                     
                     day = links[i].select('div.item')[1].text.strip() 
                     day = self.time_convert(day,time_now)
                     title = links[i].a['title']
-                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
+                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
            
-            page = int(re.search("list\?p=(\d+)+&type=ajax",url).group(1))
+            page = int(re.search("p=(\d+)+&type=ajax",url).group(1))
             if need_parse_next_page and page < 3:#need_parse_next_page:
                 page += 1
-                page_next = re.sub("list\?p=(\d)+&type=ajax","list?p=%s&type=ajax"%str(page),url)
+                page_next = re.sub("p=(\d)+&type=ajax","p=%s&type=ajax"%str(page),url)
                 if need_parse_next_page:
                     items.append(self.make_requests_from_url(page_next))
             else:

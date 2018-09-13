@@ -53,19 +53,13 @@ class AWSBlogSpider(scrapy.Spider):
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
-        day = title = _type = keywords = url = article = ''
+        day = title = type3 = keywords = url = article = ''
         url = response.url
         day = response.meta['day']
         title = response.meta['title']
-        _type = response.meta['_type']
+        type3 = response.meta['type3']
         response = response.body
         soup = BeautifulSoup(response)
-#        try:
-#            items_keywords = soup.find(class_='ar_keywords').find_all('a')
-#            for i in range(0, len(items_keywords)):
-#                keywords += items_keywords[i].text.strip() + ' '
-#        except:
-#            log.msg("News " + title + " dont has keywords!", level=log.INFO)
         
         try:
             content = soup.find("section",class_="blog-post-content")
@@ -76,7 +70,9 @@ class AWSBlogSpider(scrapy.Spider):
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
         item['day'] = day
-        item['_type'] = _type
+        item['type1'] = u'友商资讯'
+        item['type2'] = 'AWS Cloudfront'
+        item['type3'] = type3
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
@@ -113,13 +109,13 @@ class AWSBlogSpider(scrapy.Spider):
 #                    need_parse_next_page = False
                     break
 
-                _type = u"友商官方"
+                type3 = u"云计算"
                 day = item['modifiedDate']
                 day = re.sub("Z","",re.sub("T"," ",day))    
                 day = (datetime.datetime.strptime(day, "%Y-%m-%d %H:%M:%S")+timedelta(hours = 8)) # convert time_zone
                 day = int(time.mktime(day.timetuple())) # convert to timestamp
                 title = item["title"] #获取首页新闻标题
-                items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
+                items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
 
             self.lock.acquire()
             self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))

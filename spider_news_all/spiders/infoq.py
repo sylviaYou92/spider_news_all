@@ -187,7 +187,7 @@ class InfoqSpider(scrapy.Spider):
                     url_news = links[i].find("h2").find("a").get("href").strip() 
                     if not re.match("http",url_news): 
                         url_news = "http://www.infoq.com"+url_news
-                        
+                    re.sub('(?P<value>\?useSponsorshipSuggestions=true$)','',url_news)
                     if url in self.start_urls and is_first:
                         self.updated_record_url[start_url] = url_news
                         is_first = False
