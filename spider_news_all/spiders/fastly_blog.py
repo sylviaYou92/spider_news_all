@@ -13,7 +13,6 @@ import re
 from spider_news_all.items import SpiderNewsAllItem
 import datetime
 import time
-from tomd import Tomd
 import MySQLdb
 import threading
 from spider_news_all.config import SpiderNewsAllConfig
@@ -72,9 +71,10 @@ class FastlySpider(scrapy.Spider):
 #        
         try:
             content = soup.find("div",class_="column")
-            article = content.text.strip()
-            markdown = Tomd(str(content)).markdown.decode('utf-8')
-            markdown = markdown.encode('iso-8859-1').decode('utf-8')
+            article = content.text.strip().encode('iso-8859-1').decode('utf-8')
+#            markdown = Tomd(str(content)).markdown.decode('utf-8')
+#            markdown = markdown.encode('iso-8859-1').decode('utf-8')
+            markdown = unicode(content).encode('iso-8859-1').decode('utf-8')# html-code
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
@@ -105,9 +105,9 @@ class FastlySpider(scrapy.Spider):
         if len(links) > 0:
             is_first = True
             for i in range(0, len(links)):
-                    url_news = links[i].find('a').get('href') #获取新闻内容页链接
-                    if not re.match("http",url_news): #必要时对不完整的新闻链接作补充修改
-                        url_news = start_url + url_news
+                    url_news = links[i].find('a').get('href') 
+                    if not re.match("http",url_news): 
+                        url_news = "https://www.fastly.com" + url_news
                     if url in self.start_urls and is_first:
                         self.updated_record_url[start_url] = url_news
                         is_first = False
@@ -127,7 +127,7 @@ class FastlySpider(scrapy.Spider):
             else:
                 page = int(re.search("(\d+)",url).group(1))
             
-            if need_parse_next_page and page < 1:#need_parse_next_page:
+            if need_parse_next_page and page < 1: #need_parse_next_page:
                 page += 1
                 if page == 1:
                     page_next = 'https://www.fastly.com/blog/1'
@@ -139,12 +139,6 @@ class FastlySpider(scrapy.Spider):
                 self.lock.acquire()
                 self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
                 self.lock.release()
-                        
-#            if (soup.find('a', text=u'下一页')['href'].startswith('http://')):
-#                page_next = soup.find('a', text=u'下一页')['href']
-#                if need_parse_next_page:
-#                    items.append(self.make_requests_from_url(page_next))
-            
             return items
         
         
