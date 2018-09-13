@@ -170,7 +170,7 @@ class OschinaSpider(scrapy.Spider):
     def parse(self, response):
         log.msg("Start to parse page " + response.url, level=log.INFO)
         url = response.url
-        start_url = re.match("(.+)\?p=\d+&type=ajax",url).group(1)    
+        start_url = re.match("(.+)p=\d+&type=ajax",url).group(1)    
         items = []
         time_now = datetime.datetime.now()
         try:
