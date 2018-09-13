@@ -24,18 +24,18 @@ class InfoqSpider(scrapy.Spider):
     site_name = "infoq"
     allowed_domains = ["infoq.com"]###?
     start_urls = (
+            "http://www.infoq.com/cn/ai-ml-data-eng/news/0",
+            "http://www.infoq.com/cn/bigdata/news/0"
+            "http://www.infoq.com/cn/cloud-computing/news/0"
+            "http://www.infoq.com/cn/qukuailian/news/0"
+            "http://www.infoq.com/cn/ai-ml-data-eng/articles/0",
+            "http://www.infoq.com/cn/bigdata/articles/0"
+            "http://www.infoq.com/cn/cloud-computing/articles/0"
+            "http://www.infoq.com/cn/qukuailian/articles/0"
             "http://www.infoq.com/cn/development/news/0",
             "http://www.infoq.com/cn/architecture-design/news/0",
-            "http://www.infoq.com/cn/ai-ml-data-eng/news/0",
-            "http://www.infoq.com/cn/culture-methods/news/0",
-            "http://www.infoq.com/cn/Devops/news/0",
             "http://www.infoq.com/cn/development/articles/0",
             "http://www.infoq.com/cn/architecture-design/articles/0",
-            "http://www.infoq.com/cn/ai-ml-data-eng/articles/0",
-            "http://www.infoq.com/cn/culture-methods/articles/0",
-            "http://www.infoq.com/cn/Devops/articles/0",
-            "http://www.infoq.com/cn/news/0",
-            "http://www.infoq.com/cn/articles/0",
     )
     handle_httpstatus_list = [521]###?
  
@@ -123,11 +123,11 @@ class InfoqSpider(scrapy.Spider):
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
-        day = title = _type = keywords = url = article = ''
+        day = title = type3 = keywords = url = article = ''
         url = response.url
         day = response.meta['day']
         title = response.meta['title']
-        _type = response.meta['_type']
+        type3 = response.meta['type3']
         response = response.body
         soup = BeautifulSoup(response)
         try:
@@ -142,7 +142,9 @@ class InfoqSpider(scrapy.Spider):
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
         item['day'] = day
-        item['_type'] = _type
+        item['type1'] = u'源站资讯'
+        item['type2'] = u'InfoQ'
+        item['type3'] = type3
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
@@ -151,22 +153,16 @@ class InfoqSpider(scrapy.Spider):
         return item
 
     def get_type_from_url(self, url,url_news):
-        if "development" in url:
-            return u'语言与开发'
-        elif "architecture-design" in url:
-            return u'架构与设计'
-        elif 'ai-ml-data-eng' in url:
-            return u'AI前线'
-        elif 'culture-methods' in url:
-            return u'文化与方法'
-        elif 'Devops' in url:
-            return u'DevOps'
-        elif 'news' in url:
-            return u'新闻'
-        elif 'articles' in url:
-            return u'文章'
+        if 'ai-ml-data-eng' in url:
+            return u'人工智能'
+        elif 'bigdata' in url:
+            return u'大数据'
+        elif 'cloud-computing' in url:
+            return u'云计算'
+        elif 'qukuailian' in url:
+            return u'区块链'
         else:
-            return ''
+            return u'综合新闻'
 
 
 
@@ -199,12 +195,12 @@ class InfoqSpider(scrapy.Spider):
                         need_parse_next_page = False
                         break
 
-                    _type = self.get_type_from_url(url,url_news)
+                    type3 = self.get_type_from_url(url,url_news)
                     
                     day = re.findall(u"(\d+年\d+月\d+日)",links[i].find("span",class_ = "author").text)[-1].strip() 
                     day = self.time_convert(day,time_now)
                     title = links[i].find("h2").get_text().strip() 
-                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
+                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
             
             if "articles" in url:
                 page_lag = 12

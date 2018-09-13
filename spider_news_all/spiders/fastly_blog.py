@@ -71,10 +71,8 @@ class FastlySpider(scrapy.Spider):
 #        
         try:
             content = soup.find("div",class_="column")
-            article = content.text.strip().encode('iso-8859-1').decode('utf-8')
-#            markdown = Tomd(str(content)).markdown.decode('utf-8')
-#            markdown = markdown.encode('iso-8859-1').decode('utf-8')
-            markdown = unicode(content).encode('iso-8859-1').decode('utf-8')# html-code
+            article = content.text.strip().encode('unicode-escape').decode("string-escape")
+            markdown = content.prettify().encode('unicode-escape').decode("string-escape") # html-code
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
