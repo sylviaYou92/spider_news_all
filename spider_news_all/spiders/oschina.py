@@ -45,7 +45,7 @@ class OschinaSpider(scrapy.Spider):
         self.cursor.execute("SELECT start_url, latest_url FROM url_record WHERE site_name='%s'"%self.site_name)
         self.record_url = dict(self.cursor.fetchall())
         self.lock.release()
-        for start_url in [re.match("(.+)\?p=\d+&type=ajax",url).group(1) for url in self.start_urls]:
+        for start_url in [re.match("(.+)p=\d+&type=ajax",url).group(1) for url in self.start_urls]:
             if self.record_url.get(start_url)==None:
                 self.record_url.setdefault(start_url,None)
                 self.lock.acquire()
