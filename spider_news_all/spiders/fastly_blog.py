@@ -30,7 +30,7 @@ class FastlySpider(scrapy.Spider):
 
     lock = threading.RLock()
     cfg = SpiderNewsAllConfig.news_db_addr
-    conn=MySQLdb.connect(host= cfg['host'],user=cfg['user'], passwd=cfg['password'], db=cfg['db'], autocommit=True)
+    conn=MySQLdb.connect(host= cfg['host'],user=cfg['user'], passwd=cfg['password'], db=cfg['db'], autocommit=True,use_unicode = True,charset="utf8")
     conn.set_character_set('utf8')
     cursor = conn.cursor()
     cursor.execute('SET NAMES utf8;')
@@ -55,7 +55,7 @@ class FastlySpider(scrapy.Spider):
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
-        day = title = _type = keywords = url = article = ''
+        day = title = _type = keywords = url = article = markdown = ''
         url = response.url
         day = response.meta['day']
         title = response.meta['title']

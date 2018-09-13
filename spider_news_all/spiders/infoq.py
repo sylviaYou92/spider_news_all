@@ -8,12 +8,12 @@ Created on Fri Aug 31 16:36:32 2018
 import scrapy
 from bs4 import BeautifulSoup
 from scrapy import log
-from datetime import date, timedelta
+from datetime import timedelta
 import re
 from spider_news_all.items import SpiderNewsAllItem
 import datetime
 import time
-from tomd import Tomd
+#from tomd import Tomd
 import MySQLdb
 import threading
 from spider_news_all.config import SpiderNewsAllConfig
@@ -69,7 +69,6 @@ class InfoqSpider(scrapy.Spider):
             old_string = old_string.encode("utf-8")
         old_string = re.sub("：",":",old_string)
         new_string = old_string
-        #new_stirng = time.strftime("%Y-%m-%d %H:%M:%S")
         if re.match("今天",old_string):
             new_string = re.sub("今天",time_now.strftime("%Y-%m-%d"),old_string)
         elif re.match("昨天",old_string):
@@ -131,20 +130,13 @@ class InfoqSpider(scrapy.Spider):
         _type = response.meta['_type']
         response = response.body
         soup = BeautifulSoup(response)
-#        try:
-#            items_keywords = soup.find(class_='ar_keywords').find_all('a')
-#            for i in range(0, len(items_keywords)):
-#                keywords += items_keywords[i].text.strip() + ' '
-#        except:
-#            log.msg("News " + title + " dont has keywords!", level=log.INFO)
-        
         try:
             content_paragraph = soup.find("div",class_="text_info")
-            article = []
+            content = []
             for tag in content_paragraph.find("div",class_="clear").previous_siblings:
-                article.insert(0,tag)
-                
-            markdown = Tomd(''.join(str(article))).markdown.decode("unicode-escape")
+                content.insert(0,tag)
+            article = [str(tag) for tag in content]                            
+            markdown = "".join((article)).decode('utf-8')
             article = BeautifulSoup(''.join([str(tag) for tag in article])).get_text().strip()
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
@@ -181,16 +173,12 @@ class InfoqSpider(scrapy.Spider):
     def parse(self, response):
         log.msg("Start to parse page " + response.url, level=log.INFO)
         url = response.url
-#        if url in self.start_urls:
-#            self.crawl_index[self.start_urls.index(url)]=True
-#            self.all_crawled = not False in self.crawl_index
         start_url = re.search("(.*)/\d+",url).group(1)   
         items = []
         time_now = datetime.datetime.now()
         try:
             response = response.body
             soup = BeautifulSoup(response)
-#            lists = soup.find(class_='list')
             links = soup.find_all("div",class_ = ["news_type_block","news_type_block last","new_type1","news_type1 last","news_type2 full_screen"])
         except:
             items.append(self.make_requests_from_url(url))
@@ -200,8 +188,8 @@ class InfoqSpider(scrapy.Spider):
         if len(links) > 0:
             is_first = True
             for i in range(0, len(links)):
-                    url_news = links[i].find("h2").find("a").get("href").strip() #获取新闻内容页链接
-                    if not re.match("http",url_news): #必要时对不完整的新闻链接作补充修改
+                    url_news = links[i].find("h2").find("a").get("href").strip() 
+                    if not re.match("http",url_news): 
                         url_news = "http://www.infoq.com"+url_news
                         
                     if url in self.start_urls and is_first:
@@ -213,9 +201,9 @@ class InfoqSpider(scrapy.Spider):
 
                     _type = self.get_type_from_url(url,url_news)
                     
-                    day = re.findall(u"(\d+年\d+月\d+日)",links[i].find("span",class_ = "author").text)[-1].strip() ##获取新闻发布时间
+                    day = re.findall(u"(\d+年\d+月\d+日)",links[i].find("span",class_ = "author").text)[-1].strip() 
                     day = self.time_convert(day,time_now)
-                    title = links[i].find("h2").get_text().strip() #获取首页新闻标题
+                    title = links[i].find("h2").get_text().strip() 
                     items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
             
             if "articles" in url:
@@ -232,12 +220,6 @@ class InfoqSpider(scrapy.Spider):
                 self.lock.acquire()
                 self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
                 self.lock.release()
-                        
-#            if (soup.find('a', text=u'下一页')['href'].startswith('http://')):
-#                page_next = soup.find('a', text=u'下一页')['href']
-#                if need_parse_next_page:
-#                    items.append(self.make_requests_from_url(page_next))
-            
             return items
         
         
