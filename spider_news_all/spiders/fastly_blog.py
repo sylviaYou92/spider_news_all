@@ -55,20 +55,14 @@ class FastlySpider(scrapy.Spider):
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
-        day = title = _type = keywords = url = article = markdown = ''
+        day = title = type3 = keywords = url = article = markdown = ''
         url = response.url
         day = response.meta['day']
         title = response.meta['title']
-        _type = response.meta['_type']
+        type3 = response.meta['type3']
         response = response.body
         soup = BeautifulSoup(response)
-#        try:
-#            items_keywords = soup.find("div",class_='footer-tags').find_all('a')
-#            for i in range(0, len(items_keywords)):
-#                keywords += items_keywords[i].text.strip() + ' '
-#        except:
-#            log.msg("News " + title + " dont has keywords!", level=log.INFO)
-#        
+       
         try:
             content = soup.find("div",class_="column")
             article = content.text.strip().encode('unicode-escape').decode("string-escape")
@@ -77,7 +71,9 @@ class FastlySpider(scrapy.Spider):
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
         item['day'] = day
-        item['_type'] = _type
+        item['type1'] = u'友商资讯'
+        item['type2'] = 'Fastly'
+        item['type3'] = type3
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
@@ -113,12 +109,12 @@ class FastlySpider(scrapy.Spider):
                         need_parse_next_page = False
                         break
 
-                    _type = u"友商官方"
+                    type3 = u"综合新闻"
                     day = links[i].find("div",class_="post-footer").find("p").text.strip()
                     day = datetime.datetime.strptime(day, "%B %d, %Y")
                     day = int(time.mktime(day.timetuple())) # convert to timestamp
                     title = links[i].find("p",class_="post-title").text.strip()
-                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
+                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
             
             if url == start_url or url == start_url+"/":
                 page = 0

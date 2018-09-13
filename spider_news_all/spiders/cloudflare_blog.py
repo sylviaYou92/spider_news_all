@@ -14,7 +14,7 @@ import re
 from spider_news_all.items import SpiderNewsAllItem
 import datetime
 import time
-from tomd import Tomd
+#from tomd import Tomd
 import MySQLdb
 import threading
 from spider_news_all.config import SpiderNewsAllConfig
@@ -62,11 +62,11 @@ class CloudflareSpider(scrapy.Spider):
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
-        day = title = _type = keywords = url = article = ''
+        day = title = type3 = keywords = url = article = ''
         url = response.url
         day = response.meta['day']
         title = response.meta['title']
-        _type = response.meta['_type']
+        type3 = response.meta['type3']
         response = response.body
         soup = BeautifulSoup(response,"lxml")
         try:
@@ -85,7 +85,9 @@ class CloudflareSpider(scrapy.Spider):
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title
         item['day'] = day
-        item['_type'] = _type
+        item['type1'] = u'友商资讯'
+        item['type2'] = 'Cloudflare'
+        item['type3'] = type3
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
@@ -121,13 +123,13 @@ class CloudflareSpider(scrapy.Spider):
                         need_parse_next_page = False
                         break
 
-                    _type = u"友商官方"
+                    type3 = u"综合新闻"
                     day = links[i].find("time").text 
                     day = re.sub('(?P<value>\d+)(nd|st|rd|th)', self.number, day)
                     day = datetime.datetime.strptime(day, "%B %d, %Y %I:%M%p")+timedelta(hours = 8) #convert time format and time-zone
                     day = int(time.mktime(day.timetuple())) # convert to timestamp
                     title = links[i].find("h2").text 
-                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'_type': _type, 'day': day, 'title': title}))
+                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
             
             if url == start_url or url == start_url+"/":
                 page = 1
