@@ -20,7 +20,7 @@ spider_news_all\
 
 ## 使用说明
 ### 安装项目依赖
-
+本项目所需的依赖均写在misc/requirements.txt中，在目录下执行以下命令即可安装所需依赖：
 ```shell
 pip install -r requirements.txt
 ```

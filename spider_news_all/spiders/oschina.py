@@ -161,7 +161,7 @@ class OschinaSpider(scrapy.Spider):
 
     def get_type_from_url(self, url,url_news):
         if 'translate' in url:
-            return u'技术博文'
+            return u'网络安全'
         else:
             return u'综合新闻'
 
