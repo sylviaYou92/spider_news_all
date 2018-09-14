@@ -147,11 +147,11 @@ class GcorelabsSpider(scrapy.Spider):
             if content and content.find("div",class_ = "date_blog"):
                 content.find("div",class_ = "date_blog").extract()
 
-            article = content.text.strip().replace(u'\xc2\xa0', u' ').replace(u'\xa0', u' ')
+            article = content.text.strip().replace(u'\xc2\xa0', u' ').replace(u'\xa0', u' ').replace(u'\xb0',' ')
             article = article.encode('unicode-escape').decode('string-escape')
             article = re.sub('(?P<value>\\\u\d{4})',self.unicode_to_utf8,article).decode('utf-8')
     
-            markdown = content.prettify().replace(u'\xc2\xa0', u' ').replace(u'\xa0', u' ')
+            markdown = content.prettify().replace(u'\xc2\xa0', u' ').replace(u'\xa0', u' ').replace(u'\xb0',' ')
             markdown = markdown.encode('unicode-escape').decode('string-escape')
             markdown = re.sub('(?P<value>\\\u\d{4})',self.unicode_to_utf8,markdown).decode('utf-8')
         except:
@@ -164,7 +164,7 @@ class GcorelabsSpider(scrapy.Spider):
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
-        item['site'] = 'Cloudflare'
+        item['site'] = 'Gcorelabs'
         item['markdown'] = markdown
         return item
 
