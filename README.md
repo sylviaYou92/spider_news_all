@@ -1,8 +1,6 @@
 # 资讯平台Spider
 资讯平台Spider用来实现资讯平台的数据收集和结构化存储。本项目是基于centos7+mysql+python2.7+scrapy框架实现的。
 
-## 目录
-
 ## 项目结构说明
 spider_news_all\
 ├──spider_news_all\
