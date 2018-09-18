@@ -174,12 +174,12 @@ class MicrosoftAzureBlogSpider(scrapy.Spider):
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'
-        item['type2'] = 'Microsoft Azure'
+        item['type2'] = 'Azure'
         item['type3'] = type3
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
-        item['site'] = 'Microsoft Azure'
+        item['site'] = 'Azure'
         item['markdown'] = markdown
         return item
 
