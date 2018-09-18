@@ -63,6 +63,9 @@ class AWSBlogSpider(scrapy.Spider):
         
         try:
             content = soup.find("section",class_="blog-post-content")
+            for tag in content.find_all(style=re.compile("^padding")):
+                del tag['style']    
+
             article = content.text.strip()
 #            markdown = Tomd(str(content)).markdown.decode('utf-8')
             markdown = str(content).decode('utf-8')
