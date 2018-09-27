@@ -5,13 +5,6 @@ Created on Fri Sep 14 14:48:03 2018
 @author: yangwn
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  5 15:28:41 2018
-
-@author: yangwn
-"""
-
 
 import scrapy
 from bs4 import BeautifulSoup
@@ -67,7 +60,7 @@ class GcorelabsSpider(scrapy.Spider):
     
     def get_type_from_url(self, url):
         if 'media-platform' in url:
-            return u'图片音视频'
+            return u'图像音视频压缩'
         elif 'security' in url:
             return u'网络安全'
         else:
