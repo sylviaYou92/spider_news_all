@@ -64,94 +64,6 @@ class InfoqSpider(scrapy.Spider):
                 self.lock.release()
         self.updated_record_url = self.record_url.copy()
 
-    def time_convert(self,old_string,time_now):
-        if type(old_string)==unicode:
-            old_string = old_string.encode("utf-8")
-        old_string = re.sub("：",":",old_string)
-        new_string = old_string
-        if re.match("今天",old_string):
-            new_string = re.sub("今天",time_now.strftime("%Y-%m-%d"),old_string)
-        elif re.match("昨天",old_string):
-            new_string = re.sub("昨天",(time_now + timedelta(days = -1)).strftime("%Y-%m-%d"),old_string)
-        elif re.match("前天",old_string):
-            new_string = re.sub("前天",(time_now + timedelta(days = -2)).strftime("%Y-%m-%d"),old_string)
-        elif re.search("(\d+)天前",old_string):
-            delta_day = int(re.search("(\d+)天前",old_string).group(1))
-            new_string = re.sub("\d+天前",(time_now + timedelta(days = -delta_day)).strftime("%Y-%m-%d"),old_string)
-        elif re.search("(\d+)小时前",old_string):
-            delta_hour = int(re.search("(\d+)小时前",old_string).group(1))
-            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d %H:%M"),old_string)
-        elif re.search("(\d+)分钟前",old_string):
-            delta_min =  int(re.search("(\d+)分钟前",old_string).group(1))
-            new_string = (time_now-datetime.timedelta(minutes=delta_min)).strftime("%Y-%m-%d %H:%M")
-        elif re.match("\d+/\d+",old_string):
-            if len(re.findall("/",old_string)) == 1:
-                month = int(re.match("(\d+)/(\d+)",old_string).group(1))
-                date = int(re.match("(\d+)/(\d+)",old_string).group(2))
-                if month > time_now.month:
-                    year = time_now.year-1
-                else:
-                    year = time_now.year
-                new_string = re.sub("\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
-            elif len(re.findall("/"),old_string) == 2:
-                month = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(2))
-                date = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(3))
-                if len(re.match("(\d+)/(\d+)/(\d+)","old_string").group(1))==2:
-                    year = time_now.year/100*100+int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
-                elif len(re.match("(\d+)/(\d+)/(\d+)","old_string").group(1))==4:
-                    year = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
-                new_string = re.sub("\d+/\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
-        elif re.match("\d+年\d+月\d+日",old_string):
-            year = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(1))
-            month = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(2))
-            date = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(3))
-            new_string = re.sub("\d+年\d+月\d+日",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
-        elif re.match("刚刚",old_string):
-            new_string = time_now.strftime("%Y-%m-%d %H:%M:%S")
-        
-        if re.match("\d{4}-\d+-\d+ \d+:\d+:\d+",new_string):
-            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M:%S")))
-        elif re.match("\d{4}-\d+-\d+ \d+:\d+",new_string):
-            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M")))
-        elif re.match("\d{4}-\d+-\d+",new_string):
-            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d")))
-
-        return time_stamp
-
-
-
-    def parse_news(self, response):
-        log.msg("Start to parse news " + response.url, level=log.INFO)
-        item = SpiderNewsAllItem()
-        day = title = type3 = keywords = url = article = ''
-        url = response.url
-        url = re.sub('(?P<value>\?useSponsorshipSuggestions=true$)','',url)
-        day = response.meta['day']
-        title = response.meta['title']
-        type3 = response.meta['type3']
-        response = response.body
-        soup = BeautifulSoup(response)
-        try:
-            content_paragraph = soup.find("div",class_="text_info")
-            content = []
-            for tag in content_paragraph.find("div",class_="clear").previous_siblings:
-                content.insert(0,tag)
-            article = [str(tag) for tag in content]                            
-            markdown = "".join((article)).decode('utf-8')
-            article = BeautifulSoup(''.join([str(tag) for tag in article])).get_text().strip()
-        except:
-            log.msg("News " + title + " dont has article!", level=log.INFO)
-        item['title'] = title
-        item['day'] = day
-        item['type1'] = u'源站资讯'
-        item['type2'] = u'InfoQ'
-        item['type3'] = type3
-        item['url'] = url
-        item['keywords'] = keywords
-        item['article'] = article
-        item['site'] = 'InfoQ'
-        item['markdown'] = markdown
-        return item
 
     def get_type_from_url(self, url,url_news):
         if 'ai-ml-data-eng' in url:
@@ -188,6 +100,7 @@ class InfoqSpider(scrapy.Spider):
                     url_news = links[i].find("h2").find("a").get("href").strip() 
                     if not re.match("http",url_news): 
                         url_news = "http://www.infoq.com"+url_news
+                        
                     if url in self.start_urls and is_first:
                         self.updated_record_url[start_url] = url_news
                         is_first = False
@@ -217,5 +130,92 @@ class InfoqSpider(scrapy.Spider):
                 self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
                 self.lock.release()
             return items
+
+
+    def parse_news(self, response):
+        log.msg("Start to parse news " + response.url, level=log.INFO)
+        item = SpiderNewsAllItem()
+        day = title = type3 = keywords = url = article = ''
+        url = response.url
+        day = response.meta['day']
+        title = response.meta['title']
+        type3 = response.meta['type3']
+        response = response.body
+        soup = BeautifulSoup(response)
+        try:
+            content_paragraph = soup.find("div",class_="text_info")
+            content = []
+            for tag in content_paragraph.find("div",class_="clear").previous_siblings:
+                content.insert(0,tag)
+            article = [str(tag) for tag in content]                            
+            markdown = "".join((article)).decode('utf-8')
+            article = BeautifulSoup(''.join([str(tag) for tag in article])).get_text().strip()
+        except:
+            log.msg("News " + title + " dont has article!", level=log.INFO)
+        item['title'] = title
+        item['day'] = day
+        item['type1'] = u'源站资讯'
+        item['type2'] = u'InfoQ'
+        item['type3'] = type3
+        item['url'] = url
+        item['keywords'] = keywords
+        item['article'] = article
+        item['site'] = 'InfoQ'
+        item['markdown'] = markdown
+        return item
+
         
+    def time_convert(self,old_string,time_now):
+        if type(old_string)==unicode:
+            old_string = old_string.encode("utf-8")
+        old_string = re.sub("：",":",old_string)
+        new_string = old_string
+        if re.match("今天",old_string):
+            new_string = re.sub("今天",time_now.strftime("%Y-%m-%d"),old_string)
+        elif re.match("昨天",old_string):
+            new_string = re.sub("昨天",(time_now + timedelta(days = -1)).strftime("%Y-%m-%d"),old_string)
+        elif re.match("前天",old_string):
+            new_string = re.sub("前天",(time_now + timedelta(days = -2)).strftime("%Y-%m-%d"),old_string)
+        elif re.search("(\d+)天前",old_string):
+            delta_day = int(re.search("(\d+)天前",old_string).group(1))
+            new_string = re.sub("\d+天前",(time_now + timedelta(days = -delta_day)).strftime("%Y-%m-%d"),old_string)
+        elif re.search("(\d+)小时前",old_string):
+            delta_hour = int(re.search("(\d+)小时前",old_string).group(1))
+            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d %H:%M"),old_string)
+        elif re.search("(\d+)分钟前",old_string):
+            delta_min =  int(re.search("(\d+)分钟前",old_string).group(1))
+            new_string = (time_now-datetime.timedelta(minutes=delta_min)).strftime("%Y-%m-%d %H:%M")
+        elif re.match("\d+/\d+",old_string):
+            if len(re.findall("/",old_string)) == 1:
+                month = int(re.match("(\d+)/(\d+)",old_string).group(1))
+                date = int(re.match("(\d+)/(\d+)",old_string).group(2))
+                if month > time_now.month:
+                    year = time_now.year-1
+                else:
+                    year = time_now.year
+                new_string = re.sub("\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
+            elif len(re.findall("/"),old_string) == 2:
+                month = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(2))
+                date = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(3))
+                if len(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))==2:
+                    year = time_now.year/100*100+int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
+                elif len(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))==4:
+                    year = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
+                new_string = re.sub("\d+/\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
+        elif re.match("\d+年\d+月\d+日",old_string):
+            year = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(1))
+            month = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(2))
+            date = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(3))
+            new_string = re.sub("\d+年\d+月\d+日",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
+        elif re.match("刚刚",old_string):
+            new_string = time_now.strftime("%Y-%m-%d %H:%M:%S")
+        
+        if re.match("\d{4}-\d+-\d+ \d+:\d+:\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M:%S")))
+        elif re.match("\d{4}-\d+-\d+ \d+:\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M")))
+        elif re.match("\d{4}-\d+-\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d")))
+
+        return time_stamp
         

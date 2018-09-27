@@ -23,13 +23,15 @@ class OschinaSpider(scrapy.Spider):
     site_name = "oschina"
     allowed_domains = ["oschina.net"]###?
     start_urls = (
+            "https://www.oschina.net/translate/widgets/_translate_index_list?category=11&tab=completed&sort=&p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_generic_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_industry_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_programming_language_list?p=1&type=ajax",
-            "https://www.oschina.net/translate/widgets/_translate_index_list?category=11&tab=completed&sort=&p=1&type=ajax",
     )
     handle_httpstatus_list = [521]###?
-
+    
+    FLAG_INTERRUPT = False
+ 
     lock = threading.RLock()
     cfg = SpiderNewsAllConfig.news_db_addr
     conn=MySQLdb.connect(host= cfg['host'],user=cfg['user'], passwd=cfg['password'], db=cfg['db'], autocommit=True)
@@ -53,60 +55,75 @@ class OschinaSpider(scrapy.Spider):
                 self.lock.release()
         self.updated_record_url = self.record_url.copy()
     
-    def time_convert(self,old_string,time_now):
-        if type(old_string)==unicode:
-            old_string = old_string.encode("utf-8")
-        old_string = re.sub("：",":",old_string)
-        new_string = old_string
-        if re.match("今天",old_string):
-            new_string = re.sub("今天",time_now.strftime("%Y-%m-%d"),old_string)
-        elif re.match("昨天",old_string):
-            new_string = re.sub("昨天",(time_now + timedelta(days = -1)).strftime("%Y-%m-%d"),old_string)
-        elif re.match("前天",old_string):
-            new_string = re.sub("前天",(time_now + timedelta(days = -2)).strftime("%Y-%m-%d"),old_string)
-        elif re.search("(\d+)天前",old_string):
-            delta_day = int(re.search("(\d+)天前",old_string).group(1))
-            new_string = re.sub("\d+天前",(time_now + timedelta(days = -delta_day)).strftime("%Y-%m-%d"),old_string)
-        elif re.search("(\d+)小时前",old_string):
-            delta_hour = int(re.search("(\d+)小时前",old_string).group(1))
-            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d %H:%M"),old_string)
-        elif re.search("(\d+)分钟前",old_string):
-            delta_min =  int(re.search("(\d+)分钟前",old_string).group(1))
-            new_string = (time_now-datetime.timedelta(minutes=delta_min)).strftime("%Y-%m-%d %H:%M")
-        elif re.match("\d+/\d+",old_string):
-            if len(re.findall("/",old_string)) == 1:
-                month = int(re.match("(\d+)/(\d+)",old_string).group(1))
-                date = int(re.match("(\d+)/(\d+)",old_string).group(2))
-                if month > time_now.month:
-                    year = time_now.year-1
-                else:
-                    year = time_now.year
-                new_string = re.sub("\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
-            elif len(re.findall("/"),old_string) == 2:
-                month = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(2))
-                date = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(3))
-                if len(re.match("(\d+)/(\d+)/(\d+)","old_string").group(1))==2:
-                    year = time_now.year/100*100+int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
-                elif len(re.match("(\d+)/(\d+)/(\d+)","old_string").group(1))==4:
-                    year = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
-                new_string = re.sub("\d+/\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
-        elif re.match("\d+年\d+月\d+日",old_string):
-            year = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(1))
-            month = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(2))
-            date = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(3))
-            new_string = re.sub("\d+年\d+月\d+日",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
-        elif re.match("刚刚",old_string):
-            new_string = time_now.strftime("%Y-%m-%d %H:%M:%S")
+    def get_type_from_url(self, url,url_news):
+        if 'translate' in url:
+            return u'网络安全'
+        else:
+            return u'综合新闻'
+    
+
+
+    def parse(self, response):
+        log.msg("Start to parse page " + response.url, level=log.INFO)
+        url = response.url
+        start_url = re.match("(.+)p=\d+&type=ajax",url).group(1)    
+        items = []
+        time_now = datetime.datetime.now()
+        try:
+            response = response.body
+            soup = BeautifulSoup(response)
+            links = soup.find_all("div",class_ = "content")
+        except:
+            items.append(self.make_requests_from_url(url))
+            log.msg("Page " + url + " parse ERROR, try again !", level=log.ERROR)
+            return items
+        need_parse_next_page = True
+        if len(links) > 0:
+            is_first = True
+            for i in range(0, len(links)):
+                if not u"广告" in links[i].find("div",class_ = "extra").get_text() and not "topic" in links[i].a['href'] and not "blog" in links[i].a['href']: 
+                    url_news = links[i].a['href'].strip()
+                    if not re.match("http",url_news): 
+                        url_news = "https://www.oschina.net"+url_news
+                    if re.match("https://www.oschina.net/question",url_news):
+                        continue
+                    if re.match("https://www.oschina.net/event/",url_news):
+                        continue
+                    if not re.match("https://www.oschina.net/translate",url) and re.match("https://www.oschina.net/translate",url_news):
+                        continue
+                        
+                    if url in self.start_urls and is_first:
+                        self.updated_record_url[start_url] = url_news
+                        is_first = False
+                    if url_news == self.record_url[start_url]:
+                        need_parse_next_page = False
+                        print "Hello"
+                        print start_url
+                        break
+
+                    type3 = self.get_type_from_url(url,url_news)
+                    
+                    day = links[i].select('div.item')[1].text.strip()
+                    if re.match(u'发布于',day):
+                        day = re.search(u"发布于 (.+)",day).group(1)
+                    day = self.time_convert(day,time_now)
+                    title = links[i].a['title']
+                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
+           
+            page = int(re.search("p=(\d+)+&type=ajax",url).group(1))
+            if need_parse_next_page and page < 3:#need_parse_next_page:
+                page += 1
+                page_next = re.sub("p=(\d)+&type=ajax","p=%s&type=ajax"%str(page),url)
+                if need_parse_next_page:
+                    items.append(self.make_requests_from_url(page_next))
+            else:
+                print "Hello"
+                self.lock.acquire()
+                self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
+                self.lock.release()
+          
+            return items
         
-        if re.match("\d{4}-\d+-\d+ \d+:\d+:\d+",new_string):
-            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M:%S")))
-        elif re.match("\d{4}-\d+-\d+ \d+:\d+",new_string):
-            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M")))
-        elif re.match("\d{4}-\d+-\d+",new_string):
-            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d")))
-        return time_stamp
-
-
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
@@ -159,68 +176,62 @@ class OschinaSpider(scrapy.Spider):
         item['markdown'] = markdown
         return item
 
-    def get_type_from_url(self, url,url_news):
-        if 'translate' in url:
-            return u'网络安全'
-        else:
-            return u'综合新闻'
+    
+    def time_convert(self,old_string,time_now):
+        if type(old_string)==unicode:
+            old_string = old_string.encode("utf-8")
+        old_string = re.sub("：",":",old_string)
+        new_string = old_string
+        if re.match("今天",old_string):
+            new_string = re.sub("今天",time_now.strftime("%Y-%m-%d"),old_string)
+        elif re.match("昨天",old_string):
+            new_string = re.sub("昨天",(time_now + timedelta(days = -1)).strftime("%Y-%m-%d"),old_string)
+        elif re.match("前天",old_string):
+            new_string = re.sub("前天",(time_now + timedelta(days = -2)).strftime("%Y-%m-%d"),old_string)
+        elif re.search("(\d+)天前",old_string):
+            delta_day = int(re.search("(\d+)天前",old_string).group(1))
+            new_string = re.sub("\d+天前",(time_now + timedelta(days = -delta_day)).strftime("%Y-%m-%d"),old_string)
+        elif re.search("(\d+)小时前",old_string):
+            delta_hour = int(re.search("(\d+)小时前",old_string).group(1))
+            new_string = re.sub("\d+小时前",(time_now + timedelta(hours = -delta_hour)).strftime("%Y-%m-%d %H:%M"),old_string)
+        elif re.search("(\d+)分钟前",old_string):
+            delta_min =  int(re.search("(\d+)分钟前",old_string).group(1))
+            new_string = (time_now-datetime.timedelta(minutes=delta_min)).strftime("%Y-%m-%d %H:%M")
+        elif re.match("\d+/\d+",old_string):
+            if len(re.findall("/",old_string)) == 1:
+                month = int(re.match("(\d+)/(\d+)",old_string).group(1))
+                date = int(re.match("(\d+)/(\d+)",old_string).group(2))
+                if month > time_now.month:
+                    year = time_now.year-1
+                else:
+                    year = time_now.year
+                new_string = re.sub("\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
+            elif len(re.findall("/",old_string)) == 2:
+                month = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(2))
+                date = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(3))
+                if len(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))==2:
+                    year = time_now.year/100*100+int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
+                elif len(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))==4:
+                    year = int(re.match("(\d+)/(\d+)/(\d+)",old_string).group(1))
+                new_string = re.sub("\d+/\d+/\d+",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
+        elif re.match("\d+年\d+月\d+日",old_string):
+            year = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(1))
+            month = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(2))
+            date = int(re.match("(\d+)年(\d+)月(\d+)日",old_string).group(3))
+            new_string = re.sub("\d+年\d+月\d+日",datetime.datetime(year,month,date).strftime("%Y-%m-%d"),old_string)
+        elif re.match("刚刚",old_string):
+            new_string = time_now.strftime("%Y-%m-%d %H:%M:%S")
+        
+        if re.match("\d{4}-\d+-\d+ \d+:\d+:\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M:%S")))
+        elif re.match("\d{4}-\d+-\d+ \d+:\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d %H:%M")))
+        elif re.match("\d{4}-\d+-\d+",new_string):
+            time_stamp = int(time.mktime(time.strptime(new_string,"%Y-%m-%d")))
+        return time_stamp
 
 
 
-    def parse(self, response):
-        log.msg("Start to parse page " + response.url, level=log.INFO)
-        url = response.url
-        start_url = re.match("(.+)p=\d+&type=ajax",url).group(1)    
-        items = []
-        time_now = datetime.datetime.now()
-        try:
-            response = response.body
-            soup = BeautifulSoup(response)
-            links = soup.find_all("div",class_ = "item news-item")
-        except:
-            items.append(self.make_requests_from_url(url))
-            log.msg("Page " + url + " parse ERROR, try again !", level=log.ERROR)
-            return items
-        need_parse_next_page = True
-        if len(links) > 0:
-            is_first = True
-            for i in range(0, len(links)):
-                if not u"广告" in links[i].find("div",class_ = "extra").get_text() and not "topic" in links[i].a['href'] and not "blog" in links[i].a['href']: 
-                    url_news = links[i].a['href'].strip() 
-                    if re.match("https://www.oschina.net/question",url_news):
-                        continue
-                    if re.match("https://www.oschina.net/event/",url_news):
-                        continue
-                    if not re.match("https://www.oschina.net/translate",url) and re.match("https://www.oschina.net/translate",url_news):
-                        continue
-                    if not re.match("http",url_news): 
-                        url_news = "https://www.oschina.net"+url_news
-                        
-                    if url in self.start_urls and is_first:
-                        self.updated_record_url[start_url] = url_news
-                        is_first = False
-                    if url_news == self.record_url[start_url]:
-                        need_parse_next_page = False
-                        break
 
-                    type3 = self.get_type_from_url(url,url_news)
-                    
-                    day = links[i].select('div.item')[1].text.strip() 
-                    day = self.time_convert(day,time_now)
-                    title = links[i].a['title']
-                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
-           
-            page = int(re.search("p=(\d+)+&type=ajax",url).group(1))
-            if need_parse_next_page and page < 3:#need_parse_next_page:
-                page += 1
-                page_next = re.sub("p=(\d)+&type=ajax","p=%s&type=ajax"%str(page),url)
-                if need_parse_next_page:
-                    items.append(self.make_requests_from_url(page_next))
-            else:
-                self.lock.acquire()
-                self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
-                self.lock.release()
-          
-            return items
         
         
