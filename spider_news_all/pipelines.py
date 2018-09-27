@@ -63,26 +63,32 @@ class SpiderNewsAllPipeline(object):
                 self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type1,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
                 self.cursor.execute("select max(id) from dede_arctype")
                 type1_id = self.cursor.fetchone()
-            # type2 validation
-            self.cursor.execute(QUERY_TYPE,(type2,))
-            type2_id = self.cursor.fetchone()
-            if type2_id:
-                pass
-            else:
-                typedir = "{cmspath}/a/"+self._get_linkmd5id(type1)+"/"+self._get_linkmd5id(type2)
-                self.cursor.execute(self.INSERT_TYPE_ID, (type1_id,type1_id,type2,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
-                self.cursor.execute("select max(id) from dede_arctype")
+            if type2:
+                # type2 validation
+                self.cursor.execute(QUERY_TYPE,(type2,))
                 type2_id = self.cursor.fetchone()
-            # type3 validation
-            self.cursor.execute(QUERY_TYPE,(type3,))
-            type3_id = self.cursor.fetchone()
-            if type3_id:
-                pass
+                if type2_id:
+                    pass
+                else:
+                    typedir = "{cmspath}/a/"+self._get_linkmd5id(type1)+"/"+self._get_linkmd5id(type2)
+                    self.cursor.execute(self.INSERT_TYPE_ID, (type1_id,type1_id,type2,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
+                    self.cursor.execute("select max(id) from dede_arctype")
+                    type2_id = self.cursor.fetchone()
             else:
-                typedir = "{cmspath}/a/"+self._get_linkmd5id(type3)
-                self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type3,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
-                self.cursor.execute("select max(id) from dede_arctype")
+                type2_id = type1_id
+            if type3:
+                # type3 validation
+                self.cursor.execute(QUERY_TYPE,(type3,))
                 type3_id = self.cursor.fetchone()
+                if type3_id:
+                    pass
+                else:
+                    typedir = "{cmspath}/a/"+self._get_linkmd5id(type3)
+                    self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type3,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
+                    self.cursor.execute("select max(id) from dede_arctype")
+                    type3_id = self.cursor.fetchone()
+            else:
+                type3_id = type2_id
 
             self.cursor.execute(self.INSERT_ARCTINY, (type2_id,type3_id,'0'))
             self.cursor.execute("select max(id) from dede_arctiny")
