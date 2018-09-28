@@ -97,8 +97,6 @@ class OschinaSpider(scrapy.Spider):
                         is_first = False
                     if url_news == self.record_url[start_url]:
                         need_parse_next_page = False
-                        print "Hello"
-                        print start_url
                         break
 
                     type3 = self.get_type_from_url(url,url_news)
