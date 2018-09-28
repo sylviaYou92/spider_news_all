@@ -115,7 +115,6 @@ class OschinaSpider(scrapy.Spider):
                 if need_parse_next_page:
                     items.append(self.make_requests_from_url(page_next))
             else:
-                print "Hello"
                 self.lock.acquire()
                 self.cursor.execute("UPDATE url_record SET latest_url='%s' WHERE site_name='%s' AND start_url='%s'"%(self.updated_record_url[start_url],self.site_name,start_url))
                 self.lock.release()
