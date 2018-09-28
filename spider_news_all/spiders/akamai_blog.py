@@ -53,34 +53,6 @@ class AkamaiBlogSpider(scrapy.Spider):
         self.updated_record_url = self.record_url.copy()
 
 
-    def parse_news(self, response):
-        log.msg("Start to parse news " + response.url, level=log.INFO)
-        item = SpiderNewsAllItem()
-        day = title = type3 = keywords = url = article = ''
-        url = response.url
-        day = response.meta['day']
-        title = response.meta['title']
-        type3 = response.meta['type3']
-        response = response.body
-        soup = BeautifulSoup(response)
-        try:
-            content = soup.find("div",class_="asset-content entry-content")
-            article = content.text.strip().replace(u'\xc2\xa0', u' ')
-            markdown = unicode(content).replace(u"\xc2\xa0",u" ") #html code
-#            markdown = Tomd(unicode(content).replace(u"\xc2\xa0",u" ")).markdown
-        except:
-            log.msg("News " + title + " dont has article!", level=log.INFO)
-        item['title'] = title
-        item['day'] = day
-        item['type1'] = u'友商资讯'
-        item['type2'] = 'Akamai'
-        item['type3'] = type3
-        item['url'] = url
-        item['keywords'] = keywords
-        item['article'] = article
-        item['site'] = 'Akamai'
-        item['markdown'] = markdown
-        return item
 
 
     def parse(self, response):
@@ -91,7 +63,7 @@ class AkamaiBlogSpider(scrapy.Spider):
         try:
             response = response.body
             soup = BeautifulSoup(response)
-            links = soup.find_all("div",class_ = "entry-asset asset hentry")
+            links = soup.find_all("div",class_ = "blog--post")
         except:
             items.append(self.make_requests_from_url(url))
             log.msg("Page " + url + " parse ERROR, try again !", level=log.ERROR)
@@ -100,25 +72,24 @@ class AkamaiBlogSpider(scrapy.Spider):
         if len(links) > 0:
             is_first = True
             for i in range(0, len(links)):
-                    url_news = links[i].find("h2").find("a").get("href") 
-                    if not re.match("http",url_news): # adjust url_news if needed
-                        url_news = start_url+url_news
-                        
-                    if url in self.start_urls and is_first:
-                        self.updated_record_url[start_url] = url_news
-                        is_first = False
-                    if url_news == self.record_url[start_url]:
-                        need_parse_next_page = False
-                        break
-
-                    type3 = u"综合新闻"
+                url_news = links[i].find("h2").find("a").get("href") 
+                if not re.match("http",url_news): # adjust url_news if needed
+                    url_news = start_url+url_news
                     
-                    day = links[i].find("abbr",class_="published").get("title")
-                    day=re.sub("-05:00$","",re.sub("T"," ",day)) 
-                    day = (datetime.datetime.strptime(day, "%Y-%m-%d %H:%M:%S")+timedelta(hours = 13)) # convert time format and time_zone
-                    day = int(time.mktime(day.timetuple())) # convert to timestamp
-                    title = links[i].find("h2").text 
-                    items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
+                if url in self.start_urls and is_first:
+                    self.updated_record_url[start_url] = url_news
+                    is_first = False
+                if url_news == self.record_url[start_url]:
+                    need_parse_next_page = False
+                    break
+
+                type3 = u"综合新闻"
+                
+                day = links[i].find("div",class_="author-details").find_all("p")[1].text.strip()
+                day = (datetime.datetime.strptime(day, "%B %d, %Y %H:%M %p")+timedelta(hours = 13))
+                day = int(time.mktime(day.timetuple()))
+                title = links[i].find("h2").text.strip() 
+                items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
             
             if url == start_url or url == start_url+"/":
                 page = 1
@@ -139,4 +110,35 @@ class AkamaiBlogSpider(scrapy.Spider):
                 self.lock.release()
             return items
         
+
+    def parse_news(self, response):
+        log.msg("Start to parse news " + response.url, level=log.INFO)
+        item = SpiderNewsAllItem()
+        day = title = type3 = keywords = url = article = ''
+        url = response.url
+        day = response.meta['day']
+        title = response.meta['title']
+        type3 = response.meta['type3']
+        response = response.body
+        soup = BeautifulSoup(response)
+        try:
+            if re.search('(\.\.\.$)',title):
+                title = soup.find('div',class_='breadcrumb').find_all('a')[1].text.strip()
+            content = soup.find("div",class_="asset-content entry-content")
+            article = content.text.strip().replace(u'\xc2\xa0', u' ')
+            markdown = unicode(content).replace(u"\xc2\xa0",u" ") #html code
+#            markdown = Tomd(unicode(content).replace(u"\xc2\xa0",u" ")).markdown
+        except:
+            log.msg("News " + title + " dont has article!", level=log.INFO)
+        item['title'] = title
+        item['day'] = day
+        item['type1'] = u'友商资讯'
+        item['type2'] = 'Akamai'
+        item['type3'] = type3
+        item['url'] = url
+        item['keywords'] = keywords
+        item['article'] = article
+        item['site'] = 'Akamai'
+        item['markdown'] = markdown
+        return item
         

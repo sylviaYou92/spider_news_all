@@ -23,7 +23,7 @@ class OschinaSpider(scrapy.Spider):
     site_name = "oschina"
     allowed_domains = ["oschina.net"]###?
     start_urls = (
-            "https://www.oschina.net/translate/widgets/_translate_index_list?category=11&tab=completed&sort=&p=1&type=ajax",
+            "https://www.oschina.net/translate/widgets/_translate_index_list?category=13&tab=completed&sort=&p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_generic_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_industry_list?p=1&type=ajax",
             "https://www.oschina.net/news/widgets/_news_index_programming_language_list?p=1&type=ajax",
