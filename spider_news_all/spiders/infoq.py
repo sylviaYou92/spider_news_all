@@ -137,6 +137,7 @@ class InfoqSpider(scrapy.Spider):
         item = SpiderNewsAllItem()
         day = title = type3 = keywords = url = article = ''
         url = response.url
+        url = re.sub('(?P<value>\?useSponsorshipSuggestions=true$)','',url)
         day = response.meta['day']
         title = response.meta['title']
         type3 = response.meta['type3']
