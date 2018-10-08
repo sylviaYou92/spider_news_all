@@ -7,6 +7,7 @@ Created on Fri Aug 31 16:36:32 2018
 
 import scrapy
 from bs4 import BeautifulSoup
+import bs4
 from scrapy import log
 from datetime import timedelta
 import re
@@ -146,11 +147,23 @@ class InfoqSpider(scrapy.Spider):
         try:
             content_paragraph = soup.find("div",class_="text_info")
             content = []
-            for tag in content_paragraph.find("div",class_="clear").previous_siblings:
-                content.insert(0,tag)
-            article = [str(tag) for tag in content]                            
-            markdown = "".join((article)).decode('utf-8')
-            article = BeautifulSoup(''.join([str(tag) for tag in article])).get_text().strip()
+            for tag in content_paragraph.find("div",id ="contentRatingWidget").previous_siblings:
+                if type(tag)== bs4.element.NavigableString:
+                    content.insert(0,tag)
+                else:
+                    content.insert(0,tag.prettify())
+            
+            content = ''.join(content).strip()
+            content = BeautifulSoup(content,'lxml')
+            if content.find("div",class_="related_sponsors"):
+                content.find("div",class_="related_sponsors").decompose()
+                if len(content.find_all("script"))==1:
+                    content.find("script").decompose()
+            content = content.find("body")
+            content.name = "div"
+            content['class'] = "text_info"
+            article = content.text.strip()
+            markdown = content.prettify()
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title

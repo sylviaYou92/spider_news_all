@@ -1,4 +1,4 @@
--- mysql>source db.sql
+﻿-- mysql>source db.sql
 -- DROP语句慎用，第一次创建数据库的时候请取消注释
 DROP DATABASE IF EXISTS news;
 CREATE DATABASE news;
@@ -9,10 +9,12 @@ CREATE TABLE news_all(
 	title VARCHAR(255) NOT NULL,
 	site VARCHAR(255) NOT NULL,
 	keywords VARCHAR(255),
-	type VARCHAR(255),
+	type1 VARCHAR(255),
+    type2 VARCHAR(255),
+    type3 VARCHAR(255),
 	url VARCHAR(255) NOT NULL,
-	article TEXT,
-	markdown TEXT
+	article LONGTEXT,
+	markdown LONGTEXT
 ) DEFAULT CHARSET=UTF8;
 
 CREATE TABLE url_record(
