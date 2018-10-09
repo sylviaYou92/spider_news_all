@@ -10,11 +10,12 @@ import MySQLdb
 from scrapy import log
 from config import SpiderNewsAllConfig
 from hashlib import md5
+import time
 
 class SpiderNewsAllPipeline(object):
     
-    INSERT_NEWS_ALL = ("INSERT INTO news_all (linkmd5id,title, day, type, url, keywords, article, site, markdown) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
+    INSERT_NEWS_ALL = ("INSERT INTO news_all (linkmd5id,title, day, type1, type2, type3, url, keywords, article, site, markdown) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
 
     lock = threading.RLock()
     cfg = SpiderNewsAllConfig.news_db_addr
@@ -25,17 +26,18 @@ class SpiderNewsAllPipeline(object):
     cursor.execute('SET CHARACTER SET utf8;')
     cursor.execute('SET character_set_connection=utf8;')
 
-    def insert(self, title, day, _type, url, keywords, article, site, markdown):
+    def insert(self, title, day, type1, type2, type3, url, keywords, article, site, markdown):
         self.lock.acquire()
         
         linkmd5id = self._get_linkmd5id(url)
-        news = (linkmd5id, title, day, _type, url, keywords, article, site, markdown)
+        news = (linkmd5id, title, day, type1, type2, type3, url, keywords, article, site, markdown)
         self.cursor.execute("select * from news_all where linkmd5id = %s", (linkmd5id, ))
         ret = self.cursor.fetchone()
 
         if ret:
             pass
         else:
+#            self.cursor.execute(self.INSERT_NEWS_ALL, news)
             try:
                 self.cursor.execute(self.INSERT_NEWS_ALL, news)
                 log.msg(title + " saved successfully", level=log.INFO)
@@ -46,13 +48,17 @@ class SpiderNewsAllPipeline(object):
     def process_item(self, item, spider):
         title = item['title']
         day = item['day']
-        _type = item['_type']
+        day = time.localtime(day)
+        day = time.strftime("%Y-%m-%d %H:%M:%S", day) 
+        type1 = item['type1']
+        type2 = item['type2']
+        type3 = item['type3']
         url = item['url']
         keywords = item['keywords']
         article = item['article']
         site = item['site']
         markdown = item['markdown']
-        self.insert(title, day, _type, url, keywords, article, site, markdown)
+        self.insert(title, day, type1, type2, type3, url, keywords, article, site, markdown)
         return item
 
     def _get_linkmd5id(self, url):

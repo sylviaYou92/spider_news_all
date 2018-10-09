@@ -88,7 +88,7 @@ class GcorelabsSpider(scrapy.Spider):
         if len(links) > 0:
             is_first = True
             for i in range(0, len(links)):
-                    url_news = links[i].find("a",class_ = 'preview_grid_link').get('href') 
+                    url_news = links[i].find("a",class_ = 'news_one_link').get('href') 
 
                     if url in self.start_urls and is_first:
                         self.updated_record_url[start_url] = url_news
