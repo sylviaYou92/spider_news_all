@@ -143,7 +143,10 @@ class FromgeekSpider(scrapy.Spider):
                 content = re.match(pat,content).group(1)+'</article>' 
             content = BeautifulSoup(content,'lxml')
             article = content.text.strip()
-            markdown = content.find(['div','article']).prettify()
+            markdown = content.find(['div','article'])
+            if markdown.name == 'article':
+                markdown.name = 'div'
+            markdown = markdown.prettify()
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
 
