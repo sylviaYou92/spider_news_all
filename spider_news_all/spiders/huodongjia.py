@@ -87,9 +87,9 @@ class InfoqSpider(scrapy.Spider):
 #                type3 = ""
                 
                 title = links[i].find("h3").text
-                day = links[i].find_all("p",class_='address')[1].find('span').text
-                title = "%s(%s)"%(title,day)
-                day = datetime.datetime.strptime(day,'%Y-%m-%d')
+                meeting_day = links[i].find_all("p",class_='address')[1].find('span').text
+                title = "%s(%s)"%(title,meeting_day)
+                day = datetime.datetime.now()
                 day = int(time.mktime(day.timetuple()))
                 items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'day': day, 'title': title}))
 
