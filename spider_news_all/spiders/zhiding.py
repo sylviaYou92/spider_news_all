@@ -131,21 +131,25 @@ class InfoqSpider(scrapy.Spider):
         response = response.body
         soup = BeautifulSoup(response)
 
-        try:
-            content = soup.find("div",class_="qu_ocn")
-            article = content.text.strip()
-            markdown = content.prettify()
-        except:
-            log.msg("News " + title + " dont has article!", level=log.INFO)
-        
-        item['title'] = title
-        item['day'] = day
-        item['type1'] = u'源站资讯'
-        item['type2'] = u'至顶网'
-        item['type3'] = type3
-        item['url'] = url
-        item['keywords'] = keywords
-        item['article'] = article
-        item['site'] = 'zhiding'
-        item['markdown'] = markdown
-        return item
+        if '行业会议' in soup.find("div",class_="qu_weizhi").text.strip():
+            print title
+            pass
+        else:
+            try:
+                content = soup.find("div",class_="qu_ocn")
+                article = content.text.strip()
+                markdown = content.prettify()
+            except:
+                log.msg("News " + title + " dont has article!", level=log.INFO)
+            
+            item['title'] = title
+            item['day'] = day
+            item['type1'] = u'源站资讯'
+            item['type2'] = u'至顶网'
+            item['type3'] = type3
+            item['url'] = url
+            item['keywords'] = keywords
+            item['article'] = article
+            item['site'] = u'至顶网'
+            item['markdown'] = markdown
+            return item
