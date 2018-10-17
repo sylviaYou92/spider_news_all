@@ -138,7 +138,7 @@ class InfoqSpider(scrapy.Spider):
             for page_link in page_links:
                 page_str = page_link['href']
                 ind = page_str.find("?")
-                page_link['href'] = 'http://'+page_str[:ind]
+                page_link['href'] = page_str[:ind]
             
             try:
                 content = soup.find("div",class_="qu_ocn")
