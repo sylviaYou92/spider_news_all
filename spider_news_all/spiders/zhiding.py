@@ -110,7 +110,6 @@ class InfoqSpider(scrapy.Spider):
             if need_parse_next_page and page < 2:#need_parse_next_page:
                 page = page + 1
                 page_next = re.search("(.*)-(.)",url).group(1) + '-' + str(page) + '.htm'
-                print page_next
                 if need_parse_next_page:
                     items.append(self.make_requests_from_url(page_next))
             else:
@@ -123,7 +122,7 @@ class InfoqSpider(scrapy.Spider):
     def parse_news(self, response):
         log.msg("Start to parse news " + response.url, level=log.INFO)
         item = SpiderNewsAllItem()
-        day = title = type3 = keywords = url = article = ''
+        day = title = type3 = keywords = url = article = markdown = ''
         url = response.url
         day = response.meta['day']
         title = response.meta['title']
@@ -132,9 +131,15 @@ class InfoqSpider(scrapy.Spider):
         soup = BeautifulSoup(response)
 
         if '行业会议' in soup.find("div",class_="qu_weizhi").text.strip():
-            print title
             pass
         else:
+            page_links = soup.find_all("a",class_="fancybox_content")
+            
+            for page_link in page_links:
+                page_str = page_link['href']
+                ind = page_str.find("?")
+                page_link['href'] = page_str[:ind+1]
+            
             try:
                 content = soup.find("div",class_="qu_ocn")
                 article = content.text.strip()
