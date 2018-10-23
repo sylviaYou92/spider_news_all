@@ -40,6 +40,8 @@ class SpiderNewsAllPipeline(object):
         linkmd5id = self._get_linkmd5id(url)
         self.cursor.execute("select * from news_record where linkmd5id = %s", (linkmd5id, ))
         ret = self.cursor.fetchone()
+
+        title = title.replace("'","’")
         
         tempindex = '{style}/index_article.htm'
         templist = '{style}/list_article.htm'
