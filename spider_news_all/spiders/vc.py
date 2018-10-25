@@ -60,9 +60,6 @@ class InfoqSpider(scrapy.Spider):
     def parse(self, response):
         log.msg("Start to parse page " + response.url, level=log.INFO)
         url = response.url
-        print '=============='
-        print url
-        print '============='
         start_url = re.match("https://www.vc.cn/investments",url).group(0)
         items = []
         try:
@@ -79,18 +76,12 @@ class InfoqSpider(scrapy.Spider):
             is_first = True # true: need record
             for i in range(0, len(links)):
                 company_url = 'https://www.vc.cn'+links[i].find("td",class_ = "cover-info").find("div",class_="info").find("div",class_="name").find("a").get("href").strip()
-
-                print company_url
-
                 day = links[i].find("td",class_ = "invest-time").get_text().strip()
-                day = time.mktime(time.strptime(day, "%Y.%m.%d")) # convert to timestamp
-
-                print day
-                    
+                day = time.mktime(time.strptime(day, "%Y.%m.%d")) # convert to timestamp  
                 company_name = links[i].find("td",class_ = "cover-info").find("div",class_="info").find("div",class_="name").find("a").get_text().strip()
                 round_th = links[i].find("td",class_ = "link-list").find("li",class_="round").find("a").get_text().strip()
                     
-                title = company_name + ' ' + round_th
+                title = company_name + '(' + round_th + ")"
 
 
                  # type2
@@ -121,9 +112,9 @@ class InfoqSpider(scrapy.Spider):
                         type2 = u'软银中国'
                     else:
                         type2 = u""
-                    
+  
                 article = links[i].text.strip()
-                markdown = links[i].prettify()
+                markdown = article
                     
                 type3 = u""
 
