@@ -17,6 +17,9 @@ ITEM_PIPELINES = {
 }
 
 LOG_LEVEL = 'INFO'
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+}
 
 # start MySQL database configure setting
 MYSQL_HOST = 'localhost'
@@ -30,3 +33,5 @@ MYSQL_PORT = 3306
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
 CONCURRENT_REQUESTS_PER_DOMAIN = 4
 COOKIES_ENABLED = False
+DOWNLOAD_DELAY = 2
+RANDOMIZE_DOWNLOAD_DELAY = True
