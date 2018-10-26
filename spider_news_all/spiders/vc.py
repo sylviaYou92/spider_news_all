@@ -114,12 +114,15 @@ class InfoqSpider(scrapy.Spider):
                         type2 = u""
                 
                 soup2 = BeautifulSoup(response)
+                soup2.table['class'] = 'invest'
                 content =  soup2.find("table")
                 for index in range(i):
                     content.find("tbody",class_="table-list").find_all("tr")[0].decompose()
                 for _ in range(len(links)-i-1):
                     content.find("tbody",class_="table-list").find_all("tr")[1].decompose()                
                 content.find("div",class_="avatar").decompose()
+                content.td.div["class"] = 'invest-info'
+                print content
               
                 article = content.text.strip()
                 markdown = content.prettify()
