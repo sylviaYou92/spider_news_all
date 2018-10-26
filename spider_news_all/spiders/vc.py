@@ -112,9 +112,17 @@ class InfoqSpider(scrapy.Spider):
                         type2 = u'软银中国'
                     else:
                         type2 = u""
-  
-                article = links[i].text.strip()
-                markdown = article
+                
+                soup2 = BeautifulSoup(response)
+                content =  soup2.find("table")
+                for index in range(i):
+                    content.find("tbody",class_="table-list").find_all("tr")[0].decompose()
+                for _ in range(len(links)-i-1):
+                    content.find("tbody",class_="table-list").find_all("tr")[1].decompose()                
+                content.find("div",class_="avatar").decompose()
+              
+                article = content.text.strip()
+                markdown = content.prettify()
                     
                 type3 = u""
 
@@ -160,7 +168,7 @@ class InfoqSpider(scrapy.Spider):
         item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
-        item['site'] = '创投圈'
+        item['site'] = u'创投圈'
         item['markdown'] = markdown
         return item
 

@@ -37,7 +37,10 @@ class SpiderNewsAllPipeline(object):
     def insert(self, title, day, type1, type2, type3, url, keywords, article, site, markdown):
         self.lock.acquire()
         
-        linkmd5id = self._get_linkmd5id(url)
+        if site == '创投圈':
+            linkmd5id = self._get_linkmd5id(title)
+        else:
+            linkmd5id = self._get_linkmd5id(url)
         self.cursor.execute("select * from news_record where linkmd5id = %s", (linkmd5id, ))
         ret = self.cursor.fetchone()
 
