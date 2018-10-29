@@ -30,7 +30,7 @@ class SpiderNewsAllPipeline(object):
     
     INSERT_NEWS_RECORD = ("INSERT INTO news_record (linkmd5id) VALUES (%s)")
     INSERT_TYPE_ID = ("INSERT INTO dede_arctype (reid, topid, typename,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
-    INSERT_ARCTINY = ("INSERT INTO dede_arctiny (typeid,typeid2,mid) VALUES (%s,%s,%s)")
+    INSERT_ARCTINY = ("INSERT INTO dede_arctiny (typeid,typeid2,mid,sortrank) VALUES (%s,%s,%s,%s)")
     INSERT_ADDONARTICLE = ("INSERT INTO dede_addonarticle (aid,typeid,body,redirecturl) VALUES (%s,%s,%s,%s)")
     INSERT_ARCHIVES = ("INSERT INTO dede_archives ( id, typeid, typeid2, sortrank, flag, ismake, channel, arcrank, click, money, title, shorttitle, color, writer, source, litpic, pubdate, senddate, mid, keywords, lastpost, scores, goodpost, badpost, voteid, notpost, description, filename, dutyadmin, tackid, mtype, weight) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
 
@@ -95,7 +95,7 @@ class SpiderNewsAllPipeline(object):
             else:
                 type3_id = type2_id
 
-            self.cursor.execute(self.INSERT_ARCTINY, (type2_id,type3_id,'0'))
+            self.cursor.execute(self.INSERT_ARCTINY, (type2_id,type3_id,'0',day))
             self.cursor.execute("select max(id) from dede_arctiny")
             articleid = self.cursor.fetchone()
            
