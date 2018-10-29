@@ -92,16 +92,27 @@ class SpiderNewsAllPipeline(object):
                     self.cursor.execute(self.INSERT_TYPE_ID, ("0","0",type3,typedir,tempindex,templist,temparticle,namerule,namerule2,isdefault))
                     self.cursor.execute("select max(id) from dede_arctype")
                     type3_id = self.cursor.fetchone()
+                if type3 == '综合新闻':
+                    combined_new = type3_id
+                else:
+                    combined_new = 0
             else:
                 type3_id = type2_id
-
-            self.cursor.execute(self.INSERT_ARCTINY, (type2_id,type3_id,'0',day))
-            self.cursor.execute("select max(id) from dede_arctiny")
-            articleid = self.cursor.fetchone()
-           
-            self.cursor.execute(self.INSERT_ADDONARTICLE, (articleid, type2_id, markdown, url))
-            self.cursor.execute(self.INSERT_ARCHIVES,(articleid, type2_id, type3_id, day, "", "-1", "1","0", "0", "0", title, "", "", "", site, "", day, day, "0", keywords, "0", "0", "0", "0", "0", "0", "", "", "0", "0", "0", "0"))
             
+            if combined_new !=0:
+                self.cursor.execute(self.INSERT_ARCTINY, (type2_id,type3_id,'0',day))
+                self.cursor.execute("select max(id) from dede_arctiny")
+                articleid = self.cursor.fetchone()
+           
+                self.cursor.execute(self.INSERT_ADDONARTICLE, (articleid, type2_id, markdown, url))
+                self.cursor.execute(self.INSERT_ARCHIVES,(articleid, type2_id, type3_id, day, "", "-1", "1","0", "0", "0", title, "", "", "", site, "", day, day, "0", keywords, "0", "0", "0", "0", "0", "0", "", "", "0", "0", "0", "0"))
+            else:
+                self.cursor.execute(self.INSERT_ARCTINY, (type3_id,type2_id,'0',day))
+                self.cursor.execute("select max(id) from dede_arctiny")
+                articleid = self.cursor.fetchone()
+           
+                self.cursor.execute(self.INSERT_ADDONARTICLE, (articleid, type3_id, markdown, url))
+                self.cursor.execute(self.INSERT_ARCHIVES,(articleid, type3_id, type2_id, day, "", "-1", "1","0", "0", "0", title, "", "", "", site, "", day, day, "0", keywords, "0", "0", "0", "0", "0", "0", "", "", "0", "0", "0", "0"))
 
             """try:
                 self.cursor.execute(self.INSERT_NEWS_ALL, news)
