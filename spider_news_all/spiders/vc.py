@@ -122,8 +122,9 @@ class InfoqSpider(scrapy.Spider):
                 for _ in range(len(links)-i-1):
                     content.find("tbody",class_="table-list").find_all("tr")[1].decompose()
 
-                content.find("div",class_="avatar").decompose()
-                content.td.div["class"] = 'invest-info'
+                content.find("div",class_="info").name = "divcontent"
+                #content.find("div",class_="avatar").decompose()
+                content.td.divcontent["class"] = 'invest-info'
               
                 article = content.text.strip()
                 markdown = content.prettify()
