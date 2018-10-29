@@ -137,7 +137,7 @@ class InfoqSpider(scrapy.Spider):
             else:
                 page = int(re.search("(.*)(\d)",url).group(2))
             
-            if need_parse_next_page and page < 40:#need_parse_next_page:
+            if need_parse_next_page and page < 2:#need_parse_next_page:
                 page = page + 1
                 if page == 2:
                     page_next = "https://www.vc.cn/investments?action=index&controller=investments&page=2&type=investment"

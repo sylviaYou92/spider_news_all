@@ -98,6 +98,7 @@ class SpiderNewsAllPipeline(object):
                     combined_new = 0
             else:
                 type3_id = type2_id
+                combined_new = 0
             
             if combined_new !=0:
                 self.cursor.execute(self.INSERT_ARCTINY, (type2_id,type3_id,'0',day))
