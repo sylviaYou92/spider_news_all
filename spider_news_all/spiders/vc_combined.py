@@ -89,6 +89,9 @@ class InfoqSpider(scrapy.Spider):
                 news_month = day.split(".")[1]
                 flag = 1
 
+                links[i].find("td", class_="cover-info").find("div",class_="info").name = "divcontent"
+                content.td.divcontent["class"] = 'invest-info'
+
                 if flag:
                     if news_year == current_year and news_month == current_month:
                         pass
@@ -97,18 +100,15 @@ class InfoqSpider(scrapy.Spider):
                         flag = 0
             
             for _ in range(index,len(links)):
-                print content.find("tbody",class_="table-list").find_all("tr")[index]
                 content.find("tbody",class_="table-list").find_all("tr")[index].decompose()
             
-            content.find("div",class_="info").name = "divcontent"
-            content.td.divcontent["class"] = 'invest-info'
             
             article = content.text.strip()
             markdown = content.prettify()
 
             day = str(current_time).split('.')[0]
             day = int(time.mktime(time.strptime(day, "%Y-%m-%d %H:%M:%S")))
-            title = news_year + u'年' + news_month + u'月' + ' 投融信息汇总'
+            title = current_year + u'年' + current_month + u'月' + ' 投融信息汇总'
             type1 = u'投融事件'
             type2 = u''
             type3 = u''
