@@ -117,7 +117,6 @@ class InfoqSpider(scrapy.Spider):
                 soup2.table['class'] = 'invest'
                 content =  soup2.find("table")
                 content.thead.tr.th['width'] = '200px'
-                print content.thead.tr.th['width']
                 for index in range(i):
                     content.find("tbody",class_="table-list").find_all("tr")[0].decompose()
                 for _ in range(len(links)-i-1):
@@ -128,7 +127,6 @@ class InfoqSpider(scrapy.Spider):
               
                 article = content.text.strip()
                 markdown = content.prettify()
-                print article
                     
                 type3 = u""
 
