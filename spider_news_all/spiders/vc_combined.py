@@ -108,7 +108,7 @@ class InfoqSpider(scrapy.Spider):
 
             day = str(current_time).split('.')[0]
             day = int(time.mktime(time.strptime(day, "%Y-%m-%d %H:%M:%S")))
-            title = current_year + u'年' + current_month + u'月' + ' 投融信息汇总'
+            title = str(current_year) + u'年' + str(current_month) + u'月' + ' 投融信息汇总'
             type1 = u'投融事件'
             type2 = u''
             type3 = u''
