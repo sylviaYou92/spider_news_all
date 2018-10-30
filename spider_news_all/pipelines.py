@@ -36,6 +36,12 @@ class SpiderNewsAllPipeline(object):
 
     def insert(self, title, day, type1, type2, type3, url, keywords, article, site, markdown):
         self.lock.acquire()
+
+        if len(url)==2:    
+            litpic = url[1]
+            url = url[0]
+        else:
+            litpic = ""
         
         if site == '创投圈':
             linkmd5id = self._get_linkmd5id(title)
@@ -100,11 +106,6 @@ class SpiderNewsAllPipeline(object):
                 type3_id = type2_id
                 combined_new = 0
 
-            if len(url)==2:    
-                litpic = url[1]
-                url = url[0]
-            else:
-                litpic = ""
             
             if combined_new !=0:
                 self.cursor.execute(self.INSERT_ARCTINY, (type2_id,type3_id,'0',day))

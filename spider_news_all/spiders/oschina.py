@@ -60,7 +60,6 @@ class OschinaSpider(scrapy.Spider):
             return u'网络安全'
         else:
             return u'综合新闻'
-    
 
 
     def parse(self, response):
@@ -132,35 +131,41 @@ class OschinaSpider(scrapy.Spider):
         response = response.body
         soup = BeautifulSoup(response)
         
-        try:
-            if re.search("translate",url):
-                content = soup.find_all("div",class_ = "translate-content")
-                article = [str(tag) for tag in content]
-                markdown = "".join((article)).decode('utf-8')  # html code
+        #try:
+        if re.search("translate",url):
+            content = soup.find_all("div",class_ = "translate-content")
+            article = [str(tag) for tag in content]
+            markdown = "".join((article)).decode('utf-8')  # html code
 #                markdown = Tomd(markdown).markdown  # convert to markdown
-                article = [tag.text.strip() for tag in content]
-                article = ''.join(article)
-            else:
-                if re.match("https://gitee.com",url): 
-                    article = soup.find("div",class_="file_content markdown-body")
-                elif re.match("https://blog.gitee.com",url):
-                    article = soup.find("div",class_="entry-content")
-                elif re.match("https://www.oschina.net/p",url):
-                    article = soup.find("div",class_="detail editor-viewer all")
+            article = [tag.text.strip() for tag in content]
+            article = ''.join(article)
+        else:
+            if re.match("https://gitee.com",url): 
+                article = soup.find("div",class_="file_content markdown-body")
+            elif re.match("https://blog.gitee.com",url):
+                article = soup.find("div",class_="entry-content")
+            elif re.match("https://www.oschina.net/p",url):
+                article = soup.find("div",class_="detail editor-viewer all")
                     #v-details > div.detail.editor-viewer.all
-                elif soup.find("div",class_= 'content'):
-                    article = soup.find("div",class_= "content")
-                else:
-                    article = soup.find("section",class_= ["wrap cke_editable cke_editable_themed cke_contents_ltr cke_show_borders clearfix"])
+            elif soup.find("div",class_= 'content'):
+                article = soup.find("div",class_= "content")
+            else:
+                article = soup.find("section",class_= ["wrap cke_editable cke_editable_themed cke_contents_ltr cke_show_borders clearfix"])
                     
-                if article and not article.find("div",class_="ad-wrap")==None:
-                    article.find("div",class_="ad-wrap").extract()
+            if article and not article.find("div",class_="ad-wrap")==None:
+                article.find("div",class_="ad-wrap").extract()
                 
-                markdown = str(article).decode('utf-8') # html code 
+            if article.img:
+                url = [url,article.img["src"]]
+                print url
+                print "*****************************"
+                
+            markdown = str(article).decode('utf-8') # html code 
 #                markdown = Tomd(str(article)).markdown.decode("utf-8") # convert to markdown
-                article = article.text.strip()
-        except:
-            log.msg("News " + title + " dont has article!", level=log.INFO)
+            article = article.text.strip()
+        #except:
+        #    log.msg("News " + title + " dont has article!", level=log.INFO)
+
         item['title'] = title
         item['day'] = day
         item['type1'] = u'源站资讯'
