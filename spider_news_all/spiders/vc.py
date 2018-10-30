@@ -72,6 +72,7 @@ class InfoqSpider(scrapy.Spider):
             return items
         
         need_parse_next_page = True
+        prefix = 'https://www.vc.cn'
         if len(links) > 0:
             is_first = True # true: need record
             for i in range(0, len(links)):
@@ -125,6 +126,18 @@ class InfoqSpider(scrapy.Spider):
                 content.find("div",class_="info").name = "divcontent"
                 #content.find("div",class_="avatar").decompose()
                 content.td.divcontent["class"] = 'invest-info'
+
+                content.a["href"] = prefix + content.a["href"]
+                content.td.divcontent.a["href"] = prefix + content.td.divcontent.a["href"]
+                taglists = content.find("div",class_="taglist").find_all("span")
+                for j in range(0,len(taglists)):
+                    taglists[j].a['href'] = prefix + taglists[j].a['href']
+                content.find("td",class_='link-list').a["href"] = prefix + content.find("td",class_='link-list').a["href"]
+                content.find("td",class_='link-list').name = 'round-link-list'
+                invests_links = content.find("td",class_='link-list').find_all("a")
+                content.find("round-link-list",class_='link-list').name = 'td'
+                for j in range(0,len(invests_links)):
+                    invests_links[j]['href'] = prefix + invests_links[j]['href']
               
                 article = content.text.strip()
                 markdown = content.prettify()
