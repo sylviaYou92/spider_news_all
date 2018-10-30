@@ -101,7 +101,7 @@ class InfoqSpider(scrapy.Spider):
                 links[i].find("td",class_='link-list').a["href"] = prefix + links[i].find("td",class_='link-list').a["href"]
                 links[i].find("td",class_='link-list').name = 'round-link-list'
                 invests_links = links[i].find("td",class_='link-list').find_all("a")
-                links[i].find("td",class_='link-list').name = 'td'
+                links[i].find("round-link-list",class_='link-list').name = 'td'
                 for j in range(0,len(invests_links)):
                     invests_links[j]['href'] = prefix + invests_links[j]['href']
                 
