@@ -63,7 +63,6 @@ class InfoqSpider(scrapy.Spider):
         self.updated_record_url = self.record_url.copy()
 
 
-
     def parse(self, response):
         log.msg("Start to parse page " + response.url, level=log.INFO)
         url = response.url
@@ -81,6 +80,8 @@ class InfoqSpider(scrapy.Spider):
         content = soup.find("table")
         content.thead.tr.th['width'] = '200px'
         links = soup.find("tbody",class_="table-list").find_all("tr")
+
+        prefix = 'https://www.vc.cn'
         
         if len(links) > 0:
             for i in range(0,len(links)):
@@ -92,12 +93,26 @@ class InfoqSpider(scrapy.Spider):
                 links[i].find("td", class_="cover-info").find("div",class_="info").name = "divcontent"
                 content.td.divcontent["class"] = 'invest-info'
 
+                links[i].a["href"] = prefix + links[i].a["href"]
+                links[i].td.divcontent.a["href"] = prefix + links[i].td.divcontent.a["href"]
+                taglists = links[i].find("div",class_="taglist").find_all("span")
+                for j in range(0,len(taglists)):
+                    taglists[j].a['href'] = prefix + taglists[j].a['href']
+                links[i].find("td",class_='link-list').a["href"] = prefix + links[i].find("td",class_='link-list').a["href"]
+                links[i].find("td",class_='link-list').name = 'round-link-list'
+                invests_links = links[i].find("td",class_='link-list').find_all("a")
+                for j in range(0,len(invests_links)):
+                    invests_links[j]['href'] = prefix + invests_links[j]['href']
+                
+
                 if flag:
                     if news_year == current_year and news_month == current_month:
                         pass
                     else:
                         index = i
                         flag = 0
+                
+
             
             for _ in range(index,len(links)):
                 content.find("tbody",class_="table-list").find_all("tr")[index].decompose()
