@@ -109,7 +109,6 @@ class InfoqSpider(scrapy.Spider):
                 for j in range(0,len(invests_links)):
                     invests_links[j]['href'] = prefix + invests_links[j]['href']
                 
-
                 if flag:
                     if news_year == current_year and news_month == current_month:
                         pass
@@ -120,6 +119,7 @@ class InfoqSpider(scrapy.Spider):
             for _ in range(index,len(links)):
                 content.find("tbody",class_="table-list").find_all("tr")[index].decompose()
             
+            firstpic = content.img["src"]
             
             article = content.text.strip()
             markdown = content.prettify()
@@ -133,8 +133,6 @@ class InfoqSpider(scrapy.Spider):
             site = u'创投圈'
             url = "https://www.vc.cn/investments"
             keywords = ''
-
-
 
         
         
@@ -156,7 +154,7 @@ class InfoqSpider(scrapy.Spider):
             articleid = self.cursor.fetchone()
            
             self.cursor.execute(self.INSERT_ADDONARTICLE, (articleid, type_id, markdown, url))
-            self.cursor.execute(self.INSERT_ARCHIVES,(articleid, type_id, type_id, day, "", "-1", "1","0", "0", "0", title, "", "", "", site, "", day, day, "0", keywords, "0", "0", "0", "0", "0", "0", "", "", "0", "0", "0", "0"))
+            self.cursor.execute(self.INSERT_ARCHIVES,(articleid, type_id, type_id, day, "", "-1", "1","0", "0", "0", title, "", "", "", site, firstpic, day, day, "0", keywords, "0", "0", "0", "0", "0", "0", "", "", "0", "0", "0", "0"))
 
 
         return items

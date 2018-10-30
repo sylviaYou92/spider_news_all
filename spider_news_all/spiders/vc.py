@@ -142,13 +142,15 @@ class InfoqSpider(scrapy.Spider):
                 content.find("round-link-list",class_='link-list').name = 'td'
                 for j in range(0,len(invests_links)):
                     invests_links[j]['href'] = prefix + invests_links[j]['href']
+                
+                firstpic = content.img['src']
               
                 article = content.text.strip()
                 markdown = content.prettify()
                     
                 type3 = u""
 
-                items.append(self.make_requests_from_url(company_url).replace(callback=self.parse_news, meta={'day': day, 'title': title,'url':company_url,'article':article,'markdown':markdown,'type2':type2,'type3':type3}))
+                items.append(self.make_requests_from_url(company_url).replace(callback=self.parse_news, meta={'day': day, 'title': title,'url':[company_url,firstpic],'article':article,'markdown':markdown,'type2':type2,'type3':type3}))
             if url == 'https://www.vc.cn/investments':
                 page = 1
             else:
