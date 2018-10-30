@@ -100,9 +100,9 @@ class SpiderNewsAllPipeline(object):
                 type3_id = type2_id
                 combined_new = 0
 
-            if len(url)==2:
-                url = url[0]
+            if len(url)==2:    
                 litpic = url[1]
+                url = url[0]
             else:
                 litpic = ""
             
