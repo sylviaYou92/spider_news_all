@@ -91,7 +91,7 @@ class InfoqSpider(scrapy.Spider):
                 flag = 1
 
                 links[i].find("td", class_="cover-info").find("div",class_="info").name = "divcontent"
-                content.td.divcontent["class"] = 'invest-info'
+                links[i].td.divcontent["class"] = 'invest-info'
 
                 links[i].a["href"] = prefix + links[i].a["href"]
                 links[i].img['src'] = links[i].img['data-echo']
