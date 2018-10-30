@@ -132,7 +132,6 @@ class InfoqSpider(scrapy.Spider):
 
                 content.img['style'] = 'width:60px'
 
-                content.a["href"] = prefix + content.a["href"]
                 content.td.divcontent.a["href"] = prefix + content.td.divcontent.a["href"]
                 taglists = content.find("div",class_="taglist").find_all("span")
                 for j in range(0,len(taglists)):
