@@ -94,6 +94,7 @@ class InfoqSpider(scrapy.Spider):
                 content.td.divcontent["class"] = 'invest-info'
 
                 links[i].a["href"] = prefix + links[i].a["href"]
+                links[i].img['src'] = links[i].img['data-echo']
                 links[i].td.divcontent.a["href"] = prefix + links[i].td.divcontent.a["href"]
                 taglists = links[i].find("div",class_="taglist").find_all("span")
                 for j in range(0,len(taglists)):
@@ -112,8 +113,6 @@ class InfoqSpider(scrapy.Spider):
                     else:
                         index = i
                         flag = 0
-                
-
             
             for _ in range(index,len(links)):
                 content.find("tbody",class_="table-list").find_all("tr")[index].decompose()
