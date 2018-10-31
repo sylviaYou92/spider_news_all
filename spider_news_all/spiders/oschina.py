@@ -157,8 +157,6 @@ class OschinaSpider(scrapy.Spider):
                 
             if article.img:
                 url = [url,article.img["src"]]
-                print url
-                print "*****************************"
                 
             markdown = str(article).decode('utf-8') # html code 
 #                markdown = Tomd(str(article)).markdown.decode("utf-8") # convert to markdown

@@ -162,6 +162,8 @@ class InfoqSpider(scrapy.Spider):
             content = content.find("body")
             content.name = "div"
             content['class'] = "text_info"
+            if content.img:
+                url = [url,content.img["src"]]
             article = content.text.strip()
             markdown = content.prettify()
         except:
