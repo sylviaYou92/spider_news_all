@@ -131,6 +131,10 @@ class Thirty_six_KrSpider(scrapy.Spider):
             content = BeautifulSoup(self.html_parser.unescape(data_dict['content']),'lxml')
             for i in range(0,len(content.find_all(class_='detect-string'))):
                 content.find(class_='detect-string').decompose()
+            if content.img:
+                url = ['https://36kr.com/p/%s.html'%str(data_dict['id']),content.img["src"]]
+                print "**********************************"
+                print url
             article = content.text.strip()
             markdown = content.prettify()
         except:
@@ -141,7 +145,7 @@ class Thirty_six_KrSpider(scrapy.Spider):
         item['type1'] = u'源站资讯'
         item['type2'] = u'36氪'
         item['type3'] = type3
-        item['url'] = 'https://36kr.com/p/%s.html'%str(data_dict['id'])
+        item['url'] = url
         item['keywords'] = keywords
         item['article'] = article
         item['site'] = u'36氪'
