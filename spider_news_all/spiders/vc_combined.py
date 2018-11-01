@@ -84,11 +84,11 @@ class InfoqSpider(scrapy.Spider):
         prefix = 'https://www.vc.cn'
         
         if len(links) > 0:
+            flag = 1
             for i in range(0,len(links)):
                 day = links[i].find("td",class_ = "invest-time").get_text().strip()
                 news_year = day.split(".")[0]
                 news_month = day.split(".")[1]
-                flag = 1
 
                 links[i].find("td", class_="cover-info").find("div",class_="info").name = "divcontent"
                 links[i].td.divcontent["class"] = 'invest-info'
@@ -115,6 +115,9 @@ class InfoqSpider(scrapy.Spider):
                     else:
                         index = i
                         flag = 0
+                
+                if index == 0:
+                    return items
             
             for _ in range(index,len(links)):
                 content.find("tbody",class_="table-list").find_all("tr")[index].decompose()
