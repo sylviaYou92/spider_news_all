@@ -81,6 +81,7 @@ class InfoqSpider(scrapy.Spider):
         content.thead.tr.th['width'] = '200px'
         links = soup.find("tbody",class_="table-list").find_all("tr")
 
+
         prefix = 'https://www.vc.cn'
         
         if len(links) > 0:
@@ -110,7 +111,8 @@ class InfoqSpider(scrapy.Spider):
                     invests_links[j]['href'] = prefix + invests_links[j]['href']
                 
                 if flag:
-                    if news_year == current_year and news_month == current_month:
+                    if int(news_year) == int(current_year) and int(news_month) == int(current_month):
+                        index = 20
                         pass
                     else:
                         index = i
@@ -137,7 +139,6 @@ class InfoqSpider(scrapy.Spider):
             url = "https://www.vc.cn/investments"
             keywords = ''
 
-        
         
         QUERY_TYPE = 'select id from dede_archives where title = %s'
         self.cursor.execute(QUERY_TYPE,(title,))
