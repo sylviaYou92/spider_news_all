@@ -120,6 +120,11 @@ class CDN77Spider(scrapy.Spider):
             markdown = re.sub('(?P<value>\\\u\d{4})',self.unicode_to_utf8,markdown).decode('utf-8','ignore')
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        
+        if content.img:
+            url = [url,content.img['src']]
+        else:
+            url = [url,'https://www.cdn77.com/blog/wp-content/themes/twentyseventeen-child/assets/images/cdn77_logo.svg']
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'

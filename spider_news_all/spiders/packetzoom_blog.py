@@ -116,6 +116,9 @@ class PacketZoomSpider(scrapy.Spider):
        
         try:
             content = soup.find("div",class_='entry-content')
+            for tag in imgs:
+                tag['src'] = 'https://www.packetzoom.com/blog/' + tag['src']
+            
             if content.find("div",class_='panel'):
                 keywords_tag = content.find("div",class_="panel").extract()
                 keywords = keywords_tag.find_all("span",class_='label')[2].next_sibling.strip()
@@ -123,6 +126,12 @@ class PacketZoomSpider(scrapy.Spider):
                 keywords = ','.join(keywords)
             article = content.text.strip().encode('unicode-escape').decode("string-escape").decode('utf-8','ignore')
             markdown = content.prettify().encode('unicode-escape').decode("string-escape").decode('utf-8','ignore') # html-code
+            
+            if content.img:
+                url = [url,content.img['src']]
+            else:
+                url = [url,'https://miro.medium.com/fit/c/240/240/1*NhIGAx8JSDc3P70LkPaMCA.png']
+
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
         item['title'] = title

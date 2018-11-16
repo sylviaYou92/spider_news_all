@@ -149,6 +149,12 @@ class GcorelabsSpider(scrapy.Spider):
             markdown = re.sub('(?P<value>\\\u\d{4})',self.unicode_to_utf8,markdown).decode('utf-8')
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        
+        if content.img:
+            url = [url, content.img['src']]
+        else:
+            url = [url,'https://gcorelabs.com/img/logo_upd1.png']
+
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'

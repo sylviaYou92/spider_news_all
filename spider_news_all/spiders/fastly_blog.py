@@ -69,6 +69,7 @@ class FastlySpider(scrapy.Spider):
             markdown = content.prettify().encode('unicode-escape').decode("string-escape") # html-code
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        url = [url,'https://www.fastly.com/assets/logo-868441c493c3a51da7ef15f5d32db67d502cb008d612c338b5f8701e7744a1fa.svg']
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'

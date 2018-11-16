@@ -78,11 +78,20 @@ class CloudflareSpider(scrapy.Spider):
         
         try:
             content = soup.find("div",class_ = "post-content")
+            imgs = content.find_all('img')
+            for tag in imgs:
+                tag['src'] = 'https://blog.cloudflare.com' + tag['src']
             article = content.text.strip()
             markdown = str(content).decode('utf-8') #html code
 #            markdown = self.html_parser.unescape(Tomd(str(content)).markdown.decode("utf-8"))
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        
+        if content.img:
+            url = [url,content.img['src']]
+        else:
+            url = [url,'https://regmedia.co.uk/2017/06/26/cloudflarelogo.jpg?x=442&y=293&crop=1']
+
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'

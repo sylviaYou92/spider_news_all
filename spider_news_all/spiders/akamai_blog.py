@@ -130,6 +130,10 @@ class AkamaiBlogSpider(scrapy.Spider):
 #            markdown = Tomd(unicode(content).replace(u"\xc2\xa0",u" ")).markdown
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        if content.img:
+            url = [url,content.img['src']]
+        else:
+            url = [url,'https://www.akamai.com/us/en/multimedia/images/logo/akamai-logo.png']
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'

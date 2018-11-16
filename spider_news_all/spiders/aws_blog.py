@@ -71,6 +71,9 @@ class AWSBlogSpider(scrapy.Spider):
             markdown = str(content).decode('utf-8')
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        
+        url = [url,'http://s14.sinaimg.cn/mw690/006DE4Lyzy7evP3PYBfed']
+
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'

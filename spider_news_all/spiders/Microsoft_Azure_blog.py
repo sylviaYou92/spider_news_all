@@ -171,6 +171,12 @@ class MicrosoftAzureBlogSpider(scrapy.Spider):
             markdown = content.prettify() # html-code
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+
+        if content.img:
+            url = [url,content.img['src']]
+        else:
+            url = [url,'https://vignette.wikia.nocookie.net/logopedia/images/f/fa/Microsoft_Azure.svg/revision/latest/scale-to-width-down/640?cb=20170928200148']
+
         item['title'] = title
         item['day'] = day
         item['type1'] = u'友商资讯'
