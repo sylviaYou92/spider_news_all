@@ -133,8 +133,8 @@ class Thirty_six_KrSpider(scrapy.Spider):
                 content.find(class_='detect-string').decompose()
             if content.img:
                 url = ['https://36kr.com/p/%s.html'%str(data_dict['id']),content.img["src"]]
-                print "**********************************"
-                print url
+            else:
+                url = ['https://36kr.com/p/%s.html'%str(data_dict['id']),'http://sta.36krcnd.com/common-module/common-header/images/logo-a6afc.png']
             article = content.text.strip()
             markdown = content.prettify()
         except:

@@ -90,8 +90,12 @@ class EngadgetSpider(scrapy.Spider):
 
                     type3 = 'VR.AR'
                     day = links[i].find('span',class_=re.compile('^ hide@')).text.strip()
-                    day = self.time_convert(day)
-                    title = links[i].find('h2').find('span').text.strip()
+                    try:
+                        day = self.time_convert(day)
+                        title = links[i].find('h2').find('span').text.strip()
+                    except:
+                        break
+
                     items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
 
             page = int(re.search("(.*)/(\d+)",url).group(2))
@@ -132,8 +136,15 @@ class EngadgetSpider(scrapy.Spider):
             article = '\n'.join(article)
             markdown = [tag.prettify() for tag in content]    
             markdown = '\n'.join(markdown)
+            for tag in content:
+                if tag.img:
+                    url = [url,tag.img['src']]
+                    break
+            if len(url) != 2:
+                url = [url,'https://i1.fuimg.com/510372/5f55970f62852f7e.jpg']
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        print url
         item['title'] = title
         item['day'] = day
         item['type1'] = u'源站资讯'

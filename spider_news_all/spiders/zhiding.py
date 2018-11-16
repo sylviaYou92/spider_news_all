@@ -144,6 +144,7 @@ class InfoqSpider(scrapy.Spider):
                 content = soup.find("div",class_="qu_ocn")
                 article = content.text.strip()
                 markdown = content.prettify()
+                url = [url,'http://icon.zhiding.cn/zdnet/2015/images/e44_03.jpg']
             except:
                 log.msg("News " + title + " dont has article!", level=log.INFO)
             

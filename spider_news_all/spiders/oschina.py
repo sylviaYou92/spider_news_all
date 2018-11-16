@@ -157,6 +157,8 @@ class OschinaSpider(scrapy.Spider):
                 
             if article.img:
                 url = [url,article.img["src"]]
+            else:
+                url = [url,'https://www.oschina.net/build/oschina/components/imgs/header/logo.svg?t=1537346735000']
                 
             markdown = str(article).decode('utf-8') # html code 
 #                markdown = Tomd(str(article)).markdown.decode("utf-8") # convert to markdown
