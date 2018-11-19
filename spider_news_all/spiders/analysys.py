@@ -119,6 +119,9 @@ class AnalysysSpider(scrapy.Spider):
             markdown = content.prettify()
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        
+        url = [url,'https://www.analysys.cn/images/logob.svg']
+
         item['title'] = title
         item['day'] = day
         item['type1'] = u'行业分析'
