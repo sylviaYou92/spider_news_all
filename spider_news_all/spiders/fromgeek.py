@@ -147,9 +147,10 @@ class FromgeekSpider(scrapy.Spider):
             if markdown.name == 'article':
                 markdown.name = 'div'
             markdown = markdown.prettify()
-            url = [url,'http://www.fromgeek.com/statics/images/index-two/fm-logo.png']
         except:
             log.msg("News " + title + " dont has article!", level=log.INFO)
+        
+        url = [url,'http://www.fromgeek.com/statics/images/index-two/fm-logo.png']
 
         item['title'] = title
         item['day'] = day
