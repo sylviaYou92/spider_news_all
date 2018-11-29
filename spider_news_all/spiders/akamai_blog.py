@@ -53,8 +53,6 @@ class AkamaiBlogSpider(scrapy.Spider):
         self.updated_record_url = self.record_url.copy()
 
 
-
-
     def parse(self, response):
         log.msg("Start to parse page " + response.url, level=log.INFO)
         url = response.url
@@ -123,7 +121,8 @@ class AkamaiBlogSpider(scrapy.Spider):
         soup = BeautifulSoup(response)
         try:
             if re.search('(\.\.\.$)',title):
-                title = soup.find('div',class_='breadcrumb').find_all('a')[1].text.strip()
+                title = soup.find('div',class_='asset-header').find('h1').text.strip()
+                #title = soup.find('div',class_='breadcrumb').find_all('a')[1].text.strip()
             content = soup.find("div",class_="asset-content entry-content")
             article = content.text.strip().replace(u'\xc2\xa0', u' ')
             markdown = unicode(content).replace(u"\xc2\xa0",u" ") #html code
