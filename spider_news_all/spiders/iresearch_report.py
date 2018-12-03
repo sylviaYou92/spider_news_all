@@ -159,6 +159,7 @@ class IresearchSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = u'艾瑞网'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
         

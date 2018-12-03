@@ -80,6 +80,7 @@ class FastlySpider(scrapy.Spider):
         item['article'] = article
         item['site'] = 'Fastly'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
 

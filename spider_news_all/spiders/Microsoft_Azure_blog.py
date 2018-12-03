@@ -187,6 +187,7 @@ class MicrosoftAzureBlogSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = 'Azure'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
 

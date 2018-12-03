@@ -119,7 +119,11 @@ class Thirty_six_KrSpider(scrapy.Spider):
         type3 = response.meta['type3']
         response = response.body
         data_dict = json.loads(response)['data']
-        
+        abstract = data_dict['summary']
+        print '---------'
+        print abstract
+        print '*********'
+    
         try:
             keywords = json.loads(data_dict['extraction_tags_extend'])
             keywords =  [tag for tag in keywords]
@@ -131,6 +135,7 @@ class Thirty_six_KrSpider(scrapy.Spider):
             content = BeautifulSoup(self.html_parser.unescape(data_dict['content']),'lxml')
             for i in range(0,len(content.find_all(class_='detect-string'))):
                 content.find(class_='detect-string').decompose()
+
             if content.img:
                 url = ['https://36kr.com/p/%s.html'%str(data_dict['id']),content.img["src"]]
             else:
@@ -150,6 +155,7 @@ class Thirty_six_KrSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = u'36氪'
         item['markdown'] = markdown
+        item['abstract'] = abstract
         return item
 
         

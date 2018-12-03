@@ -162,6 +162,7 @@ class FromgeekSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = u'极客网'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
         

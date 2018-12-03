@@ -132,6 +132,7 @@ class AnalysysSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = '易观'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
         

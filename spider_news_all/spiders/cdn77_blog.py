@@ -135,5 +135,6 @@ class CDN77Spider(scrapy.Spider):
         item['article'] = article
         item['site'] = 'CDN77'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
         

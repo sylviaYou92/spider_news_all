@@ -155,6 +155,7 @@ class EngadgetSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = 'engadget'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
         

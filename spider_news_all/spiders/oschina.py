@@ -176,6 +176,7 @@ class OschinaSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = u'开源中国'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
     

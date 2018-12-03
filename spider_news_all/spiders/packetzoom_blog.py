@@ -144,5 +144,6 @@ class PacketZoomSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = 'PacketZoom'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
         

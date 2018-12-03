@@ -21,4 +21,5 @@ class SpiderNewsAllItem(scrapy.Item):
     article = scrapy.Field()
     site = scrapy.Field()
     markdown = scrapy.Field()
+    abstract = scrapy.Field()
     pass

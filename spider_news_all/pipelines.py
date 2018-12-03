@@ -34,7 +34,7 @@ class SpiderNewsAllPipeline(object):
     INSERT_ADDONARTICLE = ("INSERT INTO dede_addonarticle (aid,typeid,body,redirecturl) VALUES (%s,%s,%s,%s)")
     INSERT_ARCHIVES = ("INSERT INTO dede_archives ( id, typeid, typeid2, sortrank, flag, ismake, channel, arcrank, click, money, title, shorttitle, color, writer, source, litpic, pubdate, senddate, mid, keywords, lastpost, scores, goodpost, badpost, voteid, notpost, description, filename, dutyadmin, tackid, mtype, weight) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
 
-    def insert(self, title, day, type1, type2, type3, url, keywords, article, site, markdown):
+    def insert(self, title, day, type1, type2, type3, url, keywords, article, site, markdown, abstract):
         self.lock.acquire()
 
         if len(url)==2:    
@@ -120,7 +120,7 @@ class SpiderNewsAllPipeline(object):
                 articleid = self.cursor.fetchone()
            
                 self.cursor.execute(self.INSERT_ADDONARTICLE, (articleid, type3_id, markdown, url))
-                self.cursor.execute(self.INSERT_ARCHIVES,(articleid, type3_id, type2_id, day, "", "-1", "1","0", "0", "0", title, "", "", "", site, litpic, day, day, "0", keywords, "0", "0", "0", "0", "0", "0", "", "", "0", "0", "0", "0"))
+                self.cursor.execute(self.INSERT_ARCHIVES,(articleid, type3_id, type2_id, day, "", "-1", "1","0", "0", "0", title, "", "", "", site, litpic, day, day, "0", keywords, "0", "0", "0", "0", "0", "0", abstract, "", "0", "0", "0", "0"))
 
             """try:
                 self.cursor.execute(self.INSERT_NEWS_ALL, news)
@@ -140,7 +140,8 @@ class SpiderNewsAllPipeline(object):
         article = item['article']
         site = item['site']
         markdown = item['markdown']
-        self.insert(title, day, type1, type2, type3, url, keywords, article, site, markdown)
+        abstract = item['abstract']
+        self.insert(title, day, type1, type2, type3, url, keywords, article, site, markdown, abstract)
         return item
 
     def _get_linkmd5id(self, url):

@@ -154,6 +154,7 @@ class CDNnet_blogSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = 'Cloudflare'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
 

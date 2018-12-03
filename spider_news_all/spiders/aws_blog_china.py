@@ -85,6 +85,7 @@ class AWSBlogChinaSpider(scrapy.Spider):
         item['article'] = article
         item['site'] = 'aws.amazon'
         item['markdown'] = markdown
+        item['abstract'] = ''
         return item
 
 

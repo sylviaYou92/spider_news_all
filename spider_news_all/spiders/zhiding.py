@@ -158,4 +158,5 @@ class InfoqSpider(scrapy.Spider):
             item['article'] = article
             item['site'] = u'至顶网'
             item['markdown'] = markdown
+            item['abstract'] = ''
             return item
