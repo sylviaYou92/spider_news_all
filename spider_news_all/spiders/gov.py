@@ -122,7 +122,16 @@ class InfoqSpider(scrapy.Spider):
         if 'http://www.gov.cn/zhengce/content/' in url:
             try:
                 content = soup.find("div",class_="wrap")
-                print 1
+                content.table['class'] = 'gov-info'
+                del content.table['style']
+                del content.table['width']
+                del content.table.table['style']
+                del content.table.table['width']
+                for e in range(0,len(content.table.table.tr.find_all('td'))):
+                    del content.table.table.tr.find_all('td')[e]['width']
+
+                print content.table
+               
                 article = content.text.strip()
                 markdown = content.prettify()
                 url = [url,'http://www.gov.cn/govweb/xhtml/2016gov/images/public/icon_9.jpg']
