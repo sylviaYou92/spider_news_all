@@ -30,7 +30,8 @@ MYSQL_PORT = 3306
 # end of MySQL database configure setting
 
 #USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:24.0) Gecko/20100101 Firefox/24.0"
-USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36'
 CONCURRENT_REQUESTS_PER_DOMAIN = 4
 COOKIES_ENABLED = False
 RANDOMIZE_DOWNLOAD_DELAY = True
+HTTPERROR_ALLOWED_CODES = [403]
