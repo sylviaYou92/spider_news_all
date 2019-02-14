@@ -95,7 +95,7 @@ class InfoqSpider(scrapy.Spider):
                 items.append(self.make_requests_from_url(url_news).replace(callback=self.parse_news, meta={'type3': type3, 'day': day, 'title': title}))
             
 
-            page = int(re.search("(.*)/(.)",url).group(2))
+            page = int(re.search("(.*)/(\d+)\.htm",url).group(2))
             if need_parse_next_page and page < 45:#need_parse_next_page:
                 page = page + 1
                 page_next = re.search("(.*)/(.)",url).group(1) + '/' + str(page) + '.htm'
@@ -118,6 +118,7 @@ class InfoqSpider(scrapy.Spider):
         type3 = response.meta['type3']
         response = response.body
         soup = BeautifulSoup(response)
+
 
         if 'http://www.gov.cn/zhengce/content/' in url:
             try:
