@@ -96,7 +96,7 @@ class InfoqSpider(scrapy.Spider):
             
 
             page = int(re.search("(.*)/(\d+)\.htm",url).group(2))
-            if need_parse_next_page and page < 45:#need_parse_next_page:
+            if need_parse_next_page and page < 3:#need_parse_next_page:
                 page = page + 1
                 page_next = re.search("(.*)/(.)",url).group(1) + '/' + str(page) + '.htm'
                 if need_parse_next_page:
