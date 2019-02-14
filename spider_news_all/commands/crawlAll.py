@@ -30,9 +30,12 @@ class Command(ScrapyCommand):
     def run(self, args, opts):
         #settings = get_project_settings()
 
+        except_list = ['gov']
+
         spider_loader = self.crawler_process.spider_loader
         for spidername in args or spider_loader.list():
-            print "*********cralall spidername************" + spidername
-            self.crawler_process.crawl(spidername, **opts.spargs)
+            if spidername not in except_list:
+                print "*********cralall spidername************" + spidername
+                self.crawler_process.crawl(spidername, **opts.spargs)
 
         self.crawler_process.start()

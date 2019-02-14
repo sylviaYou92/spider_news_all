@@ -129,8 +129,6 @@ class InfoqSpider(scrapy.Spider):
                 del content.table.table['width']
                 for e in range(0,len(content.table.table.tr.find_all('td'))):
                     del content.table.table.tr.find_all('td')[e]['width']
-
-                print content.table
                
                 article = content.text.strip()
                 markdown = content.prettify()
